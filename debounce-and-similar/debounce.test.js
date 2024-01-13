@@ -135,7 +135,7 @@ test("debounce", { concurrency: false }, async () => {
     });
 
 
-    await test("incorrect 2 also doesn't work", async () => {
+    await test("incorrect 2 doesn't work", async () => {
         let cntCall = 0;
         const errors = [];
 
@@ -143,11 +143,11 @@ test("debounce", { concurrency: false }, async () => {
             v_a_l_u_e: 0,
             f: function (num) {
                 cntCall++;
-                try { 
+                try {
                     if (typeof this === "undefined" || !this.hasOwnProperty("v_a_l_u_e")) {
                         throw new Error("Missing");
                     }
-                    this.v_a_l_u_e += num; 
+                    this.v_a_l_u_e += num;
                 }
                 catch (err) { errors.push(err); }
             }
@@ -164,5 +164,5 @@ test("debounce", { concurrency: false }, async () => {
 
 
 // 🔷 Very good link:
-// https://stackoverflow.com/questions/41431605/how-to-handle-errors-from-settimeout-in-javascript
-// https://nodejs.org/api/assert.html#assertrejectsasyncfn-error-message.
+//  https://stackoverflow.com/questions/35782435/node-js-assert-throws-with-async-functions-promises
+//  https://nodejs.org/api/assert.html#assertrejectsasyncfn-error-message.
