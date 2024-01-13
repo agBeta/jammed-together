@@ -36,4 +36,40 @@ test("throttle", { concurrency: false }, async () => {
         assert.strictEqual(cntCall, 2);
         assert.strictEqual(value, 12 + 32 + 64);
     });
+
+    await test("works and handles 'this' binding", async () => {
+        let cntCall = 0;
+        const errors = [];
+
+        const obj = {
+            v_a_l_u_e: 0,
+            f: function (a, b) {
+                cntCall++;
+                try {
+                    if (typeof this === "undefined" || !this.hasOwnProperty("v_a_l_u_e")) 
+                        throw new Error("Missing");
+                    this.v_a_l_u_e += a + b;
+                }
+                catch (err) { errors.push(err); }
+            }
+        }
+
+        obj.fThrottled = makeThrottle(obj.f, delay);
+        obj.fThrottled(4, 8);
+        obj.fThrottled(16, 32);
+        // The first should be executed immediately and the second should wait for delay ms
+        assert.strictEqual(cntCall, 1);
+        assert.strictEqual(obj.v_a_l_u_e, 12);
+
+        await justWait(delay + epsilon);
+        assert.strictEqual(cntCall, 2);
+        assert.strictEqual(obj.v_a_l_u_e, 12 + 16 + 32);
+
+        await justWait(delay + epsilon);
+        // Now delay ms has passed since last execution.
+        obj.fThrottled(-16, -32);
+        // It should be executed immediately
+        assert.strictEqual(cntCall, 3);
+        assert.strictEqual(obj.v_a_l_u_e, 12);
+    });
 });
