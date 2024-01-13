@@ -4,6 +4,7 @@
         "allowJs": true,
         "checkJs": true,
         "strict": true,
+        "strictFunctionTypes": false,
         "module": "NodeNext",
         "moduleResolution": "nodenext",
         "allowSyntheticDefaultImports": true
