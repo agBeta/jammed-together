@@ -72,4 +72,32 @@ test("throttle", { concurrency: false }, async () => {
         assert.strictEqual(cntCall, 3);
         assert.strictEqual(obj.v_a_l_u_e, 12);
     });
+
+    await test("cancel works", async () => {
+        let value = 0;
+        let cntCall = 0;
+        const f = function({ num }) {
+            value += num;
+            cntCall++;
+        }
+        const fThrottled = makeThrottle(f, delay);
+        fThrottled({ num: 4 });
+        assert.strictEqual(cntCall, 1);
+        assert.strictEqual(value, 4);
+
+        fThrottled({ num: 8 });
+        // It should not be executed until delay passes.
+        assert.strictEqual(cntCall, 1);
+        assert.strictEqual(value, 4);
+
+        fThrottled({ num: 16 });
+        assert.strictEqual(cntCall, 1);
+
+        fThrottled.cancel();
+
+        await justWait(delay + epsilon);
+        // Cancel should prevent executing all calls since last execution 
+        assert.strictEqual(cntCall, 1);
+        assert.strictEqual(value, 4);
+    });
 });
