@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Practicing basics and fundamentals",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "debounce": "node --test-reporter=spec --test debounce-and-similar/debounce.test.js"
   },
