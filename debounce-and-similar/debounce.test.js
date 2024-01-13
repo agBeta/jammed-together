@@ -192,6 +192,31 @@ test("debounce", { concurrency: false }, async () => {
         assert.notStrictEqual(obj.v_a_l_u_e, 4);
         assert.strictEqual(errors.length, 1);
     });
+
+
+    await test("Given we bind, even incorrect 1 works", async () => {
+        let cntCall = 0;
+        const errors = [];
+        const obj = {
+            v_a_l_u_e: 0,
+            f: function (num) {
+                cntCall++;
+                try {
+                    if (typeof this === "undefined" || !this.hasOwnProperty("v_a_l_u_e"))
+                        throw new Error("Missing");
+                    this.v_a_l_u_e += num;
+                }
+                catch (err) { errors.push(err); }
+            }
+        }
+        obj.fDebounced = _makeIncorrectDebounce_1(obj.f.bind(obj) /**<----*/, delay);
+        obj.fDebounced(4);
+        await justWait(delay + epsilon);
+
+        assert.strictEqual(cntCall, 1);
+        assert.strictEqual(obj.v_a_l_u_e, 4);
+        assert.strictEqual(errors.length, 0); // no errors
+    });
 });
 
 
