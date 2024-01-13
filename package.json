@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "debounce": "node --test-reporter=spec --test debounce-and-similar/debounce.test.js"
+    "debounce": "node --test-reporter=spec --test debounce-and-similar/debounce.test.js",
+    "throttle": "node --test-reporter=spec --test debounce-and-similar/throttle.test.js"
   },
   "keywords": [],
   "author": "",
