@@ -1,48 +1,4 @@
 /** 
- * @version practice 
- * @param {Function} cb 
- * @param {"correct" | "incorrect_1" | "incorrect_2" } which 
- */
-export function _makeDebounce_(cb, delay, which) {
-    let timeoutID;
-
-    if (which === "correct") {
-        return function (...args) {
-            clearTimeout(timeoutID);
-            timeoutID = setTimeout(() => {
-                cb.apply(this, args);
-                //  You could also write cb.bind(this)(...args); 
-                //  Notice, for apply() we don't spread the arguments (i.e. three dots).
-            }, delay);
-        };
-    }
-
-    if (which === "incorrect_1") {
-        //  Arrow function doesn't create its own execution context but inherits the "this" from 
-        //  the outer function where the arrow function is defined.
-        /** @description Uses arrow function. */
-        return (...args) => {
-            clearTimeout(timeoutID);
-            timeoutID = setTimeout(() => {
-                cb.apply(this, args);
-            }, delay);
-        };
-    }
-
-    if (which === "incorrect_2") {
-        /** @description Doesn't handle "this" binding. */
-        return function (...args) {
-            clearTimeout(timeoutID);
-            timeoutID = setTimeout(() => {
-                cb(...args); // Not handling "this" binding.
-            }, delay);
-        };
-    }
-}
-
-
-/** 
- * @version final
  * @param {Function} cb 
  * @param {number} [delay=1000] - Won't execute until delay milliseconds have passed since the 
  *          last time it is called.
@@ -53,6 +9,10 @@ export function _makeDebounce_(cb, delay, which) {
  */
 export function makeDebounce(cb, delay = 1000, immediateInvoke = false) {
     let timerID = null;
+
+    //  Not sure if using apply(..) is necessary or not. Everything works if we use bind(..) where 
+    //  we are calling makeDebounce. Also checkout commit d9191f2.
+    //  Also https://stackoverflow.com/questions/72794979/can-you-explain-why-debounce-does-this-binding.
 
     return function (...args) {
         clearTimeout(timerID); // <- It doesn't make timerID null or undefined.

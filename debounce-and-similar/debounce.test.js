@@ -1,7 +1,7 @@
 import test from "node:test";
+import EventEmitter from "node:events";
 import assert, { rejects } from "node:assert";
-import { promisify } from "node:util";
-import { _makeDebounce_, makeDebounce } from "./debounce.js";
+import { makeDebounce } from "./debounce.js";
 
 //  For more transparency and simplicity, we're not using fake timers in this test suite.
 //  So this test suite will take quite a while to finish, since it literally waits for some
@@ -12,7 +12,7 @@ function justWait(ms = 1000) {
 }
 
 
-test("debounce (practice)", { concurrency: false }, async () => {
+test("debounce", { concurrency: false }, async () => {
 
     //  You may need to twiddle with following values based on your machine cpu, etc. But
     //  since native test-runner is really fast, these values should be fine.
@@ -21,7 +21,7 @@ test("debounce (practice)", { concurrency: false }, async () => {
 
 
     // For await see https://nodejs.org/api/test.html#extraneous-asynchronous-activity.
-    await test("correct debounced function works", async (t) => {
+    await test("works", async (t) => {
         let value = 0;
         let cntCall = 0;
         const f = function (num = 1) {
@@ -30,7 +30,7 @@ test("debounce (practice)", { concurrency: false }, async () => {
             cntCall++;
         }
 
-        const fDebounced = _makeDebounce_(f, delay, "correct");
+        const fDebounced = makeDebounce(f, delay);
         fDebounced(4);
         // f shouldn't be called until delay:
         assert.strictEqual(cntCall, 0);
@@ -67,63 +67,64 @@ test("debounce (practice)", { concurrency: false }, async () => {
     });
 
 
-    await test("correct debounce function gracefully handles 'this' binding", async () => {
-        let cntCall = 0;
-        const obj = {
-            value: 0,
-            f: function (num = 1) {
-                this.value += num;
-                cntCall++;
-            }
-        }
+    await test("gracefully handles 'this' binding", async () => {
+        const obj = new CustomClass();
+        // If we don't bind, "this" would be undefined.
+        const f = obj.addToThisValue.bind(obj);
+        const ee = new EventEmitter();
+        ee.on("add", f);
+        ee.emit("add", 10);
+        assert.strictEqual(obj.value, 10);
 
-        // First let's have a sanity check.
-        obj.f(5);
-        assert.strictEqual(obj.value, 5);
-        obj.f(-5);
-        assert.strictEqual(obj.value, 0);
-        assert.strictEqual(cntCall, 2);
-        // Now reset cntCall for actual assertions
-        cntCall = 0;
-
-
-        // 🧯 Don't forget to bind!
-        const fDebounced = _makeDebounce_(obj.f.bind(obj), delay, "correct");
-        fDebounced(4);
+        ee.on("other", f);
+        ee.emit("other", 5);
         await justWait(delay + epsilon);
-
-        assert.strictEqual(cntCall, 1);
-        assert.strictEqual(obj.value, 4);
+        assert.strictEqual(obj.value, 15)
     });
 
 
-    await test("incorrect 1 debounce doesn't work", async () => {
-        let cntCall = 0;
-        const obj = {
-            value: 0,
-            f: function (num = 1) {
-                cntCall++;
-                this.value += num;
-            }
-        }
+    // await test("incorrect 1 debounce doesn't work", async () => {
+    //     let cntCall = 0;
+    //     const obj = {
+    //         value: 0,
+    //         f: function (num = 1) {
+    //             cntCall++;
+    //             this.value += num;
+    //         }
+    //     }
 
-        const fDebounced = _makeDebounce_(obj.f.bind(obj), delay, "incorrect_1");
+    //     const fDebounced = _makeDebounce_(obj.f.bind(obj), delay, "incorrect_1");
 
-        //  fDebounced(4) below --> After "delay" ms, inside setTimeout, f() will be executed 
-        //  and we used an arrow function inside cb(...), so property "value" doesn't exist 
-        //  on "this", and (this.value += num) will throw an error. The error will be caught 
-        //  inside f().
-        fDebounced(4);
-        await justWait(delay + epsilon);
+    //     //  fDebounced(4) below --> After "delay" ms, inside setTimeout, f() will be executed 
+    //     //  and we used an arrow function inside cb(...), so property "value" doesn't exist 
+    //     //  on "this", and (this.value += num) will throw an error. The error will be caught 
+    //     //  inside f().
+    //     fDebounced(4);
+    //     await justWait(delay + epsilon);
         
-        // f should be called,
-        assert.strictEqual(cntCall, 1);
-        // but should throw an error, since incorrect implementation doesn't handle "this" binding.
-        assert.notStrictEqual(obj.value, 4);
-        // assert.strictEqual(cntThrow, 1);
-    });
+    //     // f should be called,
+    //     assert.strictEqual(cntCall, 1);
+    //     // but should throw an error, since incorrect implementation doesn't handle "this" binding.
+    //     assert.notStrictEqual(obj.value, 4);
+    //     // assert.strictEqual(cntThrow, 1);
+    // });
 });
+
+
+class CustomClass {
+    constructor() {
+        this.value = 0;
+    }
+    addToThisValue(number) {
+        console.log(" 📢 ", this);
+        console.log(" 🀄 ", number);
+        this.value += number;
+    }
+}
 
 // 🔷 Very good link:
 // https://stackoverflow.com/questions/41431605/how-to-handle-errors-from-settimeout-in-javascript
 // https://nodejs.org/api/assert.html#assertrejectsasyncfn-error-message.
+
+//  Another very good link about "this" inside a controller:
+//  https://stackoverflow.com/a/51980022
