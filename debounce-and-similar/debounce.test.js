@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert, { rejects } from "node:assert";
-import { 
-    makeDebounce, 
-    _makeIncorrectDebounce_1, 
+import {
+    makeDebounce,
+    _makeIncorrectDebounce_1,
+    _makeIncorrectDebounce_2,
 } from "./debounce.js";
 
 //  For more transparency and simplicity, we're not using fake timers in this test suite.
@@ -19,7 +20,7 @@ test("debounce", { concurrency: false }, async () => {
     //  You may need to twiddle with following values based on your machine cpu, etc. But
     //  since native test-runner is really fast, these values should be fine.
     const delay = 600;
-    const epsilon = 100;
+    const epsilon = 80;
 
 
     // For await see https://nodejs.org/api/test.html#extraneous-asynchronous-activity.
@@ -73,11 +74,20 @@ test("debounce", { concurrency: false }, async () => {
         let cntCall = 0;
         const errors = [];
         const obj = {
-            value: 0,
+            //  Since inside f, "this" could be anything which may even have property "value", it's
+            //  recommended to use a unique key name (instead of "value"). We could use Symbol(), but
+            //  for simplicity we just use something like below.
+            //  // value: 0,
+            v_a_l_u_e: 0,
             f: function (num) {
                 cntCall++;
-                try { this.value += num; }
-                catch(err) {
+                try {
+                    if (typeof this === "undefined" || !this.hasOwnProperty("v_a_l_u_e")) {
+                        throw new Error("Missing");
+                    }
+                    this.v_a_l_u_e += num;
+                }
+                catch (err) {
                     errors.push(err);
                     //  This ↖️ is our simple way of checking if "this" binding failed or not. We don't 
                     //  write this test case using assert.rejects() or throws(), as it's difficult to
@@ -94,15 +104,12 @@ test("debounce", { concurrency: false }, async () => {
         //  inside f().
         obj.fDebounced(4);
         await justWait(delay + epsilon);
-        
+
         // f should be called,
         assert.strictEqual(cntCall, 1);
         // but should throw an error, since incorrect implementation doesn't handle "this" binding.
-        assert.notStrictEqual(obj.value, 4);
+        assert.notStrictEqual(obj.v_a_l_u_e, 4);
         assert.strictEqual(errors.length, 1);
-        // console.log(errors[0]);
-        // Also let's make sure the error is caused by "value" not being defined on "this".
-        assert.strictEqual(errors[0].message.includes("reading 'value'"), true);
     });
 
     await test("correct debounce gracefully handles 'this' binding", async () => {
@@ -111,20 +118,47 @@ test("debounce", { concurrency: false }, async () => {
         const errors = [];
 
         const obj = {
-            value: 0,
+            v_a_l_u_e: 0,
             f: function (num) {
                 cntCall++;
-                try { this.value += num; }
-                catch(err) { errors.push(err); }
+                try { this.v_a_l_u_e += num; }
+                catch (err) { errors.push(err); }
             }
         }
         obj.fDebounced = makeDebounce(obj.f, delay);
         obj.fDebounced(4);
         await justWait(delay + epsilon);
-        
+
         assert.strictEqual(cntCall, 1);
-        assert.strictEqual(obj.value, 4);
+        assert.strictEqual(obj.v_a_l_u_e, 4);
         assert.strictEqual(errors.length, 0);
+    });
+
+
+    await test("incorrect 2 also doesn't work", async () => {
+        let cntCall = 0;
+        const errors = [];
+
+        const obj = {
+            v_a_l_u_e: 0,
+            f: function (num) {
+                cntCall++;
+                try { 
+                    if (typeof this === "undefined" || !this.hasOwnProperty("v_a_l_u_e")) {
+                        throw new Error("Missing");
+                    }
+                    this.v_a_l_u_e += num; 
+                }
+                catch (err) { errors.push(err); }
+            }
+        }
+        obj.fDebounced = _makeIncorrectDebounce_2(obj.f, delay);
+        obj.fDebounced(4);
+        await justWait(delay + epsilon);
+
+        assert.strictEqual(cntCall, 1);
+        assert.notStrictEqual(obj.v_a_l_u_e, 4);
+        assert.strictEqual(errors.length, 1);
     });
 });
 
