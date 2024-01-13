@@ -69,7 +69,7 @@ test("debounce", { concurrency: false }, async () => {
     });
 
 
-    await test("incorrect debounce doesn't work", async () => {
+    await test("incorrect 1 doesn't work", async () => {
         let cntCall = 0;
         const errors = [];
         const obj = {
@@ -103,6 +103,28 @@ test("debounce", { concurrency: false }, async () => {
         // console.log(errors[0]);
         // Also let's make sure the error is caused by "value" not being defined on "this".
         assert.strictEqual(errors[0].message.includes("reading 'value'"), true);
+    });
+
+    await test("correct debounce gracefully handles 'this' binding", async () => {
+        // Same procedure as the previous test.
+        let cntCall = 0;
+        const errors = [];
+
+        const obj = {
+            value: 0,
+            f: function (num) {
+                cntCall++;
+                try { this.value += num; }
+                catch(err) { errors.push(err); }
+            }
+        }
+        obj.fDebounced = makeDebounce(obj.f, delay);
+        obj.fDebounced(4);
+        await justWait(delay + epsilon);
+        
+        assert.strictEqual(cntCall, 1);
+        assert.strictEqual(obj.value, 4);
+        assert.strictEqual(errors.length, 0);
     });
 });
 
