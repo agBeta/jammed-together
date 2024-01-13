@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES2018",
+        "allowJs": true,
+        "checkJs": true,
+        "strict": true,
+        "module": "NodeNext",
+        "moduleResolution": "nodenext",
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "./**/*.js",
+        "/*.js"
+    ],
+    "exclude": [ "./**/node_modules" ],
+    "types": [ "node" ]
+}   
