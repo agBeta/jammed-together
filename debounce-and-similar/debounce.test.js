@@ -69,6 +69,38 @@ test("debounce", { concurrency: false }, async () => {
         assert.strictEqual(value, 16 + 4);
     });
 
+    await test("works with immediateInvoke=true", async () => {
+        let value = 0;
+        let cntCall = 0;
+
+        const f = function (num) {
+            value += num;
+            cntCall++;
+        }
+
+        const fDebounced = makeDebounce(f, delay, true);
+        fDebounced(4);
+        // It should be immediately invoked.
+        assert.strictEqual(cntCall, 1);
+        assert.strictEqual(value, 4);
+
+        fDebounced(8);
+        //  Call above should be ignored.
+        assert.strictEqual(cntCall, 1);
+        //  ... ignored completely.
+        await justWait(delay + epsilon);
+        assert.strictEqual(cntCall, 1);
+
+        //  But if we invoke again, since delay ms has passed, it should immediately
+        //  be invoked.
+        fDebounced(16);
+        assert.strictEqual(cntCall, 2);
+        assert.strictEqual(value, 20);
+        //  Let's make sure it doesn't invoke again inside setTimeout.
+        await justWait(delay + epsilon);
+        assert.strictEqual(cntCall, 2);
+        assert.strictEqual(value, 20);
+    });
 
     await test("incorrect 1 doesn't work", async () => {
         let cntCall = 0;
