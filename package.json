@@ -4,7 +4,7 @@
   "description": "Practicing basics and fundamentals",
   "main": "index.js",
   "scripts": {
-    "t-deb": "echo \"Error: no test specified\" && exit 1"
+    "debounce": "node --test-reporter=spec --test debounce-and-similar/debounce.test.js"
   },
   "keywords": [],
   "author": "",

@@ -3,8 +3,7 @@
         "target": "ES2018",
         "allowJs": true,
         "checkJs": true,
-        "strict": true,
-        "strictFunctionTypes": false,
+        "strict": false,
         "module": "NodeNext",
         "moduleResolution": "nodenext",
         "allowSyntheticDefaultImports": true
