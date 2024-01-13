@@ -1,1 +1,0 @@
-Make sure you install @types/node for version 20 (`npm i --save-dev @types/node`). Older versions don't have types for node:test. (Based on https://github.com/nodejs/help/issues/3847#issuecomment-1845231231).
