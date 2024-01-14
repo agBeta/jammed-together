@@ -1,10 +1,10 @@
 /** 
- * @param {Function} cb 
+ * @param {Function} fn 
  * @param {number} delay - If cb hasn't been executed within last delay ms, it will
  *          execute immediately. Otherwise, it waits until delay ms passes since last
  *          execution, and then it will execute cb with the most recent arguments.
  */
-export function makeThrottle(cb, delay) {
+export function makeThrottle(fn, delay) {
     // Read comments at the end of this file
     let timerIDOfMostRecentScheduledExecution;
     let lastTimeCbExecuted = 0;
@@ -14,13 +14,13 @@ export function makeThrottle(cb, delay) {
 
         if (waitRemaining <= 0) {
             lastTimeCbExecuted = Date.now();
-            cb.apply(this, args);
+            fn.apply(this, args);
         }
         else {
             clearTimeout(timerIDOfMostRecentScheduledExecution);
             timerIDOfMostRecentScheduledExecution = setTimeout(() => {
                 lastTimeCbExecuted = Date.now();
-                cb.apply(this, args);
+                fn.apply(this, args);
             }, waitRemaining);
         }
     }
