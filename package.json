@@ -7,7 +7,8 @@
   "scripts": {
     "debounce": "node --test-reporter=spec --test debounce-and-similar/debounce.test.js",
     "throttle": "node --test-reporter=spec --test debounce-and-similar/throttle.test.js",
-    "sout": "node --test-reporter=spec --test debounce-and-similar/space-out.test.js"
+    "sout": "node --test-reporter=spec --test debounce-and-similar/space-out.test.js",
+    "walk": "node --test-reporter=spec --test directory-recursive-walk/walk.test.js"
   },
   "keywords": [],
   "author": "",
