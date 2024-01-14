@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "debounce": "node --test-reporter=spec --test debounce-and-similar/debounce.test.js",
-    "throttle": "node --test-reporter=spec --test debounce-and-similar/throttle.test.js"
+    "throttle": "node --test-reporter=spec --test debounce-and-similar/throttle.test.js",
+    "sout": "node --test-reporter=spec --test debounce-and-similar/space-out.test.js"
   },
   "keywords": [],
   "author": "",
