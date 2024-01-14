@@ -1,47 +1,48 @@
 import { promisify } from "util";
 const sleep = promisify(setTimeout);
 
-// HELO MLONTREAL
-
-sleep(50).then(() => process.stdout.write("A"));
-
 new Promise((resolve) => {
-    process.stdout.write("H");
-    resolve("O");
+    console.log("1"); // runs immediately
+    resolve("4");
 })
 .then(message => {
-    process.stdout.write(message);
+    console.log(message); // prints 4
+    //  synchronously goes to finally block below
+    //  But for some strange reason, queueMicrotask precedes 6.
 })
-.finally(() => {
-    process.stdout.write("M");
-});
+.finally(() => console.log("6") );
 
-queueMicrotask(() => process.stdout.write(" "));
+queueMicrotask(() => console.log("5🔥") /* <-- Why?! */);
+process.nextTick(() => console.log("7"));
 
-process.nextTick(() => process.stdout.write("L"));
+// Order of the following two lines matter. They will both execute in the same tick (even same phase?).
+sleep(50).then(() => console.log("13"));
+setTimeout(() => console.log("End"), 50);
 
-setTimeout(() => process.stdout.write("L"), 100);
+setImmediate(() => console.log("8"));
 
-setImmediate(() => process.stdout.write("O"));
-
-process.stdout.write("E");
+console.log("2");
 
 foo();
 
 async function foo() {
-    process.stdout.write("L");
-    for (const returnedValue of await Promise.all([
-        doPrintSleepReturn(20, "N", /*return=*/"R"),
-        doPrintSleepReturn(10, "T", /*return=*/"E"),
+    console.log("3");
+    for (const returnedValue of await Promise.all/*<---*/([
+        doPrintSleepReturn(20, "9", /*return=*/"11"),
+        doPrintSleepReturn(10, "10", /*return=*/"12"),
     ])) {
-        process.stderr.write(returnedValue);
+        console.log(returnedValue);
     }
 };
 
 
 // ---------------------
 async function doPrintSleepReturn(timeToSleep, stringToPrint, valueToReturn) {
-    setImmediate(() => process.stdout.write(stringToPrint));
+    setImmediate(() => console.log(stringToPrint));
     await sleep(timeToSleep);
     return valueToReturn;
 }
+
+// ---------------------
+
+// Credit to: Broken promises by James Snell.

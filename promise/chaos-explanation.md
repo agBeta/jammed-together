@@ -1,4 +1,5 @@
-b
+  
+
 Based on [Node.js docs](https://nodejs.org/en/learn/asynchronous-work/understanding-setimmediate.): Any function passed as the setImmediate() argument is a callback that's executed in the **next** iteration of the event loop.  
 A function passed to process.nextTick() is going to be executed on the **current** iteration of the event loop, after the current operation ends. This means it will always execute **before** setTimeout and setImmediate.
 
@@ -8,9 +9,17 @@ A process.nextTick callback is added to process.nextTick queue. A Promise.then()
 
 Based on [nextTick docs](https://nodejs.org/en/learn/asynchronous-work/understanding-processnexttick), Every time the event loop takes a full trip, we call it a tick.
 
-Calling setTimeout(() => {}, 0) will execute the function at the end of next tick, much later than when using nextTick() which prioritizes the call and executes it just before the beginning of the next tick.
+Calling setTimeout(() => {}, 0) will execute the function at the end of next tick, much later than when using nextTick() which prioritizes the call and executes it **just before** the beginning of the next tick.
 
 Use nextTick() when you want to make sure that in the next event loop iteration that code is already executed.
+
+Based on [MDN queueMicrotask](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask), The microtask is a short function which will run **after** the current task has completed its work and when there is **no other code waiting** to be run **before** control of the execution context is returned to the browser's event loop. This lets your code run without interfering with any other, potentially higher priority, code that is pending, but before the browser regains control over the execution context,
+
+Highly recommended to read [event loop timers and nextTick](https://nodejs.org/en/guides/event-loop-timers-and-nexttick).  
+
+In essence, the names should be swapped. process.nextTick() fires more immediately than setImmediate(), but this is an artifact of the past which is unlikely to change. 
+
+According to [Richard Clayton article](https://rclayton.silvrback.com/scheduling-execution-in-node-js), process.nextTick or setTimeout(fn, 0) both compete against waiting I/O callbacks and potentially starve the event loop. 
 
 </br>
 
