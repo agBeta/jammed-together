@@ -1,0 +1,12 @@
+git
+node
+n
+i3
+vscode
+docker
+firefox
+chrome
+insomnia
+filezila
+obsidian
+password manager -> manual
