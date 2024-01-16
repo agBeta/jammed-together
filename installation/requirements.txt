@@ -10,3 +10,6 @@ insomnia
 filezila
 obsidian
 password manager -> manual
+
+maybe: tldr -> sudo npm install -g tldr
+maybe: aptitude -> sudo apt install aptitude (aptitude is also from canonical)
