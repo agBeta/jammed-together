@@ -13,3 +13,5 @@
   tasks:
     - include: tasks/shell-setup.yml
     - include: tasks/node-setup.yml
+    - include: tasks/i3.yml
+    - include: tasks/other-apps.yml

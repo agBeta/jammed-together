@@ -8,7 +8,6 @@ firefox
 chrome
 insomnia
 filezila
-obsidian
 password manager -> manual
 
 maybe: tldr -> sudo npm install -g tldr

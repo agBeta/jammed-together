@@ -35,3 +35,7 @@ Thanks to @Fernando, the command below will free up disk space by removing all t
 ## Ansible Vault
 ansible-vault encrypt testfile
 ansible-vault decrypt testfile
+
+
+## install fonts
+We didn't. If you want, you can see https://dev.to/waylonwalker/installing-system-nerd-fonts-with-ansible-35kh.

@@ -1,0 +1,8 @@
+name: Install System Packages 3 (the rest)
+  become: true
+  apt:
+    # Note, i3 version in apt registry is 4.20 (released 2021) but the latest version is 4.23. It's ok to
+    # use apt, since there is not major change.
+    name: [ "i3" ]
+  tags:
+    - i3
