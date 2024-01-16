@@ -1,0 +1,23 @@
+- name: Install nodejs and npm
+  become: true
+  # Though nodejs version in apt registry is always old, but we'll install newer version via n anyway.
+  # So this isn't a problem.
+  apt:
+    name: ["nodejs", "npm"]
+  tags:
+    - install
+    - node 
+
+- name: Install N
+  npm:
+    name: n
+    global: yes
+  tags:
+    - install
+    - node
+
+- name: Install version of Node
+  shell: n 20.9.0
+  tags:
+    - install
+    - node

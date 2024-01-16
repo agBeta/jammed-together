@@ -30,3 +30,8 @@ revision flag for a package can be found in: `snap list --all`
 
 Thanks to @Fernando, the command below will free up disk space by removing all the old disabled snap packages:
 `snap list --all | awk '/disabled/{system("sudo snap remove " $1 " --revision=" $3)}'`
+
+
+## Ansible Vault
+ansible-vault encrypt testfile
+ansible-vault decrypt testfile
