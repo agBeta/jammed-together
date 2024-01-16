@@ -32,10 +32,12 @@ Thanks to @Fernando, the command below will free up disk space by removing all t
 `snap list --all | awk '/disabled/{system("sudo snap remove " $1 " --revision=" $3)}'`
 
 
-## Ansible Vault
+## Ansible
 ansible-vault encrypt testfile
 ansible-vault decrypt testfile
 
+ansible-playbook -t node local.yml
+ansible-pull -U UrlToGitRepo(?)
 
 ## install fonts
 We didn't. If you want, you can see https://dev.to/waylonwalker/installing-system-nerd-fonts-with-ansible-35kh.

@@ -8,8 +8,10 @@
       update_cache: true
       state: present
     tags:
-      - install
-      - core
+      - zsh
+      - node
+      - i3
+      - apps
   tasks:
     - include: tasks/shell-setup.yml
     - include: tasks/node-setup.yml
