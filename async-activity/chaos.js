@@ -12,7 +12,7 @@ new Promise((resolve) => {
 })
 .finally(() => console.log("6") );
 
-queueMicrotask(() => console.log("5🔥") /* <-- Why?! */);
+queueMicrotask(() => console.log("5 queueMicrotask"));
 process.nextTick(() => console.log("7"));
 
 // Order of the following two lines matter. They will both execute in the same tick (even same phase?).
