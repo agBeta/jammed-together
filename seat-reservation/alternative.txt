@@ -1,4 +1,0 @@
-Another solution is to have just one endpoint at the beginning. Everyone that 
-hits the endpoint will be place in a queue. We process 10 people at the queue
-at each round. Then send notification (by websocket or polling in client-side)
-when the client turn comes (وقتی نوبت آن کلاینت فرارسید).
