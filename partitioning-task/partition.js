@@ -11,7 +11,7 @@ function asyncAvgWithSetImmediate(n, cbAfterCalculatingAvg) {
             cb(sum);
             return;
         }
-        // "Asynchronous recursion".
+        // "Asynchronous recursion". (slower but doesn't block the event loop)
         setImmediate(step.bind(null /*no this context*/, i + 1, cb));
     }
 
@@ -30,7 +30,6 @@ function asyncAvgWithNextTick(n, cbAfterCalculatingAvg) {
             cb(sum);
             return;
         }
-        // "Asynchronous recursion". (slower but doesn't block the event loop)
         process.nextTick(step.bind(null /*no this context*/, i + 1, cb));
     }
 
