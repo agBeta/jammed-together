@@ -18,6 +18,8 @@ for (let i = 1; i <= 100; i++) {
 }
 
 
+// Completely accordant with Jake Archibald's talk
+
 /* prints
     Finished heavy job: 1
     executing nextTick callback of 1
