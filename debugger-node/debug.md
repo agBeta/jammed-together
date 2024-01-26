@@ -21,4 +21,6 @@ According to [nodejs console docs](https://nodejs.org/api/console.html#consolepr
 
 Also read more about debugger in [nodejs debugger docs](https://nodejs.org/api/debugger.html). V8 Inspector integration allows attaching Chrome DevTools to Node.js instances for debugging and profiling. It uses the Chrome DevTools Protocol. V8 Inspector can be enabled by passing the --inspect flag when starting a Node.js application. It is also possible to supply a custom port with that flag, e.g. --inspect=9222 will accept DevTools connections on port 9222. To break on the first line of the application code, pass the --inspect-brk flag instead of --inspect.
 
-Also take a look at Memory Leaks inside node.md in nevis self-documentation.
+Also take a look at Memory Leaks inside node.md in nevis self-documentation.  
+  
+Also we use `--trace-event-categories` in async-activity/pitfall.js.
