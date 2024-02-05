@@ -2,7 +2,7 @@ FROM node:20.11-alpine
 WORKDIR /app
 # Below, we could set /app instead of dot(.)
 COPY package.json .
-# COPY package-lock.json .
+# (?) COPY package-lock.json .
 RUN npm install
 # Another layer, though technically we have already copied package.json. Our package.json 
 # doesn't change very frequently, so docker caching the result of previous layer will become

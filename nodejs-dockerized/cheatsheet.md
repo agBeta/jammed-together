@@ -127,20 +127,40 @@ docker rm <container_name> -fv
 
 ## Docker compose
 
-Instead of long commands we saw previously above, use docker compose! We you run docker compose it will create a brand new network for all of your services.   
+Instead of long commands we saw previously above, use docker compose! We you run docker compose it will create a brand new network for all of your services.  
 According to [this SO](https://stackoverflow.com/a/66516826) `docker-compose` is deprecated and you should now use `docker compose`.
 Note, on Linux you need to install docker-compose separately.
 
 ```bash
-# builds the images and starts our services
+# builds the images (if not found) and starts our services
+# See notes below.
 docker compose up -d
 
 # flag -v to also remove volumes
 docker compose down -v
 ```
 
-`docker-compose up -d --build`
+Docker compose only builds the image if it doesn't exist. It **doesn't** check whether associated Dockerfile(s) are changed or not. In order to rebuild, you must:
 
-`docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
+```bash
+# either
+docker compose up --build -d
+
+# ... or
+docker compose build
+docker compose create
+docker compose start
+```
+
+</br>
+
+### for Production
+You can create different Dockerfile(s) and docker-compose files for development and production. Another approach is to have a single Dockerfile (**Note** our Dockerfile inside `/multiple-compose` is a bit different) and multiple compose files. Then for production you can run:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down -v
+```
 
 --> remember npm ci vs npm install

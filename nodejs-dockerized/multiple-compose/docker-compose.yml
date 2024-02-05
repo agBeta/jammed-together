@@ -1,0 +1,11 @@
+# Shared configuration between production and development
+# Attention: These files should be in the root. We put them here only for documentation purposes.
+version: "3"
+services:
+  node-app:
+    # build will be overwritten by either prod or dev compose file.
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000

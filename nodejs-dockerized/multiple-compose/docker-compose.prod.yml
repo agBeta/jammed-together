@@ -1,0 +1,12 @@
+# Specific configuration for development
+version: "3"
+services:
+  node-app:
+    build:
+      context: .
+      args:
+        COMPOSE_ENV: production
+    # We don't have volumes for production.
+    environment:
+      - NODE_ENV=production
+    command: npm start
