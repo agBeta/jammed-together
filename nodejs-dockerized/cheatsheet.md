@@ -126,11 +126,18 @@ docker rm <container_name> -fv
 ---
 
 ## Docker compose
-Instead of long commands we saw previously above, use docker-compose!
 
-`docker-compose up -d`
-`docker-compose down`  
---> -v flag: If you want to also remove volumes.
+Instead of long commands we saw previously above, use docker compose! We you run docker compose it will create a brand new network for all of your services.   
+According to [this SO](https://stackoverflow.com/a/66516826) `docker-compose` is deprecated and you should now use `docker compose`.
+Note, on Linux you need to install docker-compose separately.
+
+```bash
+# builds the images and starts our services
+docker compose up -d
+
+# flag -v to also remove volumes
+docker compose down -v
+```
 
 `docker-compose up -d --build`
 
