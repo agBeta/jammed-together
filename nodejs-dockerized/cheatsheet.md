@@ -2,71 +2,131 @@
 
 (Based on youtube video "Docker + Node.js⧸express tutorial： Building dev⧸prod workflow with docker and Node.js" By Sanjeev Thiyagarijan)
 
-```dockerfile
-FROM node:20.11.0-alphine
-```
-
-```
-docker build .
+```bash
+docker build -t <image_name> <path/to/Dockerfile or dot(.)>
 docker image ls
-docker image rm >IMAGE_ID<
+docker image rm <IMAGE_ID>
 ```
 
-</br>
+BTW, according to [this SO](https://stackoverflow.com/a/56212572) you can also specify a tag (usually it's recommended to use Git version as tag) by:
 
-`docker build -t node-app-image . `  
-`docker run -d --name node-app-container-1 node-app-image`  
-`docker ps`  
-`docker rm node-app-container-1 -f`  
-flag `-f`: first stops the container and then deletes it.
-
-</br> 
-`docker run -p 3000:3000 -d --name node-app node-app-image` --> right number is port inside container
-
-</br>
-Inside container:
-
+```bash
+# set git tag as an environment variable
+GIT_REV_TAG=$(git log -1 --pretty=format:%h)
+# build
+docker build -t <image-name>:$GIT_REV_TAG .
+# get rid of environment variable
+unset GIT_REV_TAG
 ```
+
+Now we have created the image (say node-app-image), you can run:
+
+```bash
+# this works but no port is published, so our container isn't accessible from outside world (even from our localhost)
+docker run -d --name node-app node-app-image
+
+docker ps
+
+# flag -f means stop the container and then delete it. See also "Stopping" section below.
+docker rm node-app -f
+
+# port on the right side of colon is inside container
+docker run -p 3000:3000 -d --name node-app node-app-image
+```
+
+Before we stop the container let's go inside it:
+
+```bash
 docker exec -it node-app bash
+# if command above failed (bash shell may not exist on container), then try:
+docker exec -it node-app /bin/sh
+
 ls
+# ... other linux commands
 exit
 ```
 
 </br>
 
-`docker run -v path_Local_Machine:path_Inside_Container -p 3000:3000 -d --name node-app node-app-image`  
-**Note**: `.` doesn't work here in path.
+### Stopping and removing
 
-`docker run -v $(pwd):/app -p 3000:3000 -d --name node-app node-app-image`
+```bash
+docker container stop node-app
+docker container rm node-app
+docker container ls
 
-</br>
-After deleting node_modules from local [45:00]:
-
+# assuming you also want to remove the image
+docker image rm <image_name>
+docker image ls
 ```
+
+### Logs
+
+```bash
 docker ps -a
 docker logs node-app
 ```
 
-`docker run -v $(pwd):/app -v /app/node_modules -p 3000:3000 -d --name node-app node-app-image`
 </br>
 
-`docker run -v $(pwd):/app:ro -v /app/node_modules -p 3000:3000 -d --name node-app node-app-image`
+### Automatic sync in development using bind mount
+
+The first one **will fail** if node_modules isn't present on local machine. Why? Because it will overwrite /app inside container, so it will remove node_modules INSIDE container and `start:watch` will try to run nodemon which doesn't exist.
+
+```bash
+# fails
+docker run -v $(pwd):/app -p 3000:3000 -d --name node-app node-app-image
+
+# correct way that doesn't overwrite /app/node_modules of container. See explanation below.
+docker run -v $(pwd):/app    -v /app/node_modules -p 3000:3000 -d --name node-app node-app-image
+
+# correct and more secure (read-only), though it raised read-only error for me
+docker run -v $(pwd):/app:ro -v /app/node_modules -p 3000:3000 -d --name node-app node-app-image
+
+```
+
+BTW, **Note** dot(`.`) doesn't work here in volume path.  
+If you're using Windows PowerShell you must use `${pwd}`.
+
+Explanation: Second `-v` is an anonymous volume. The second command works because `/app/node_modules` is more specific.
 
 </br>
 
-`docker run -v $(pwd):/app:ro -v /app/node_modules --env PORT=4000 -p 3000:4000 -d --name node-app node-app-image`
+### Environment variable
 
-Note: For another env variable you have to specify --env again for each one.
+You can either set environment variable in Dockerfile or set it manually via command line. You can use either `--env` or use `--env-file`:
 
-`printenv` --> prints env variable currently set in bash
+```bash
+docker run -v $(pwd):/app:ro -v /app/node_modules --env-file ./.env -p 3000:4000 -d --name node-app node-app-image
+```
 
-`docker run -v $(pwd):/app:ro -v /app/node_modules --env-file ./.env -p 3000:4000 -d --name node-app node-app-image`
+**Important Note**: According to [this SO](https://stackoverflow.com/questions/30494050/how-do-i-pass-environment-variables-to-docker-containers), If you use `--env` (`-e`) flag, pass all `-e` values **before** the name of the docker image, otherwise no error will be raised and none of the variables will have a value.
 
-`docker volume ls`
+</br>
 
-`docker volume rm "VOLUME_NAME"`
-OR
-`docker volume prune`
+### Volumes
+
+As you keep spinning and deleting containers, their volumes won't get deleted automatically and eventually you'll end up having hundreds of volumes.
+
+```bash
+docker volume ls
+
+# manually remove a volume
+docker volume rm <VOLUME_NAME>
+
+# remove all unnecessary volumes at once (Be careful)
+docker volume prune
+
+# Alternatively, -v flag also removes the associated volumes
+docker rm <container_name> -fv
+```
+
+</br>
+
+---
+
+## Docker compose
+Instead of long commands we saw previously above, use docker-compose!
 
 `docker-compose up -d`
 `docker-compose down`  
