@@ -1,6 +1,0 @@
-- add test for bind
-
-- make sure good (performant) way is chosen to tackle seat reservation. E.g. make sure
-there isn't a tabe locking in table. Perform test (in which another api wants to read
-the price of a seat ticket meanwhile someone is trying to acquire the same seat and use
-artificial delay and make sure request completes soon). Perform load testing.
