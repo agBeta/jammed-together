@@ -121,8 +121,6 @@ docker volume prune
 docker rm <container_name> -fv
 ```
 
-</br>
-
 ---
 
 ## Docker compose
@@ -155,6 +153,7 @@ docker compose start
 </br>
 
 ### for Production
+
 You can create different Dockerfile(s) and docker-compose files for development and production. Another approach is to have a single Dockerfile (**Note** our Dockerfile inside `/multiple-compose` is a bit different) and multiple compose files. Then for production you can run:
 
 ```bash
@@ -163,4 +162,26 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.yml -f docker-compose.prod.yml down -v
 ```
 
---> remember npm ci vs npm install
+</br>
+
+---
+
+## Dockerfile Best Practices
+
+(Based on [docker-node github](https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md))
+
+- By default, any Docker Container may consume as much of the hardware such as CPU and RAM. If you are running multiple containers on the same host you should limit how much memory they can consume. So use these flags: `-m "300M" --memory-swap "1G"`.  
+
+- Use `CMD ["node","index.js"]`.
+
+Final docker run command:
+```bash
+docker run \
+  --init \
+  -e "NODE_ENV=production" \
+  -u "node" \
+  -m "300M" --memory-swap "1G" \
+  -w "/home/node/app" \
+  --name "my-nodejs-app" \
+  node [script]
+```
