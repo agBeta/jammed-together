@@ -123,7 +123,7 @@ You can always set the cookies via `document.cookie` and browser will automatica
 *from [disscussion in undici issue (2022)](https://github.com/nodejs/undici/issues/1463):*  
 
 *aeharding*  
-Hello! I'm confused. I was using nodejs v18.0 fetch and I could get the Set-Cookie header just fine.  
+Hello. I'm confused. I was using nodejs v18.0 fetch and I could get the Set-Cookie header just fine.  
 However now I cannot when I upgraded to nodejs v18.2. I see it when doing a console.log() of response.headers, but response.headers.get('set-cookie') doesn't work.  
 I understand that that's the fetch API standard, but that standards seems like it was designed for a browser, and not Node. So I guess the fetch API is simply not compatible with my use case and I must use a third party library?  
 
@@ -138,7 +138,7 @@ Also read more on this matter in:
 - Rich Harris comment (2022) comparing different fetch implemenations (Deno, `node-fetch`, cloudflare workers) in [here](https://github.com/nodejs/undici/issues/1262#issuecomment-1131839918).
 - an open issue in [WinterGC github](https://github.com/wintercg/fetch/issues/7).
 
-</br>
+<br/>
 
 *from [this deno issue (2020)](https://github.com/denoland/deno/issues/6868#issuecomment-663812386)*:  
 
@@ -159,7 +159,7 @@ Also you may see [Evert's blog](https://evertpot.com/http/).
 -   Use the response code(s) consistently.
 -   Include as much additional information in the response body as you can to help the developer(s) using your API figure out what's going on.
 
-</br>
+<br/>
 
 ### `Allow` Header in 405
 
@@ -200,7 +200,7 @@ It seems Rails also use 422 for validation errors.
 
 Though 422 is more appropriate in some situation. see "leo_cape" comment and "Philippe Gioseffi" comment below [this SO answer](https://stackoverflow.com/a/52363900/22969951).
 
-</br>
+<br/>
 
 ### already logged in
 
@@ -215,7 +215,7 @@ So it's basically idempotent. Makes sense. -- mahemoff
 What if another user is logged in? – soslan
 
 
-</br>
+<br/>
 
 ###  200 without body?
 
@@ -429,7 +429,7 @@ An example of a cross-origin request: the front-end JavaScript code served from 
 For security reasons, browsers restrict cross-origin HTTP requests initiated from scripts. For example, fetch() and XMLHttpRequest follow the same-origin policy. This means that a web application using those APIs can only request resources from the same origin the application was loaded from unless the response from other origins includes the right CORS headers.
 
 
-</br>
+<br/>
 
 ## Signed cookies
 
@@ -439,7 +439,7 @@ See https://stackoverflow.com/questions/3240246/signed-session-cookies-a-good-id
 According to https://stackoverflow.com/a/3240427:
 They should be kept private, so that attackers cannot steal them and impersonate an authenticated user. Any request that performs an action that requires authorization should be tamper-proof. That is, the entire request must have some kind of integrity protection such as an HMAC so that its contents can't be altered. For web applications, these requirements lead inexorably to HTTPS.
 
-</br>
+<br/>
 
 ## REST
 
@@ -480,7 +480,6 @@ If you have such requirements - probably you want to consider:
 1. Prefetching
 2. BFF layer - where you'll define client-specific API contracts, and will have a place to collect data from different sources and aggregate them in a client-friendly structure)
 3. GraphQL - which is designed for such scenarios.
-   ---end of comment---
 
 From another comment: Optimizing REST services is challenging and depends heavily on how you're going to use them. Always including child records can be a bad practice.
 
@@ -493,14 +492,14 @@ If minimizing HTTP calls is optimal for your use cases and you want to aggregate
 *comment by sfulibarri*:  
 The biggest mistake any dev can make when building a REST API is spending hours and hours agonizing over if every little thing is 'RESTful' or not. Just get it working, you will understand more about the problem space as you work and be able to make better decisions. Trying to design for some extremely vague principals of 'RESTfulness' from the get go will only cause you pain and more often than not, unless you are building an explicitly public API, the only thing that matters is that your endpoints provide the needed functionality and behave according to the documentation. Most of the worst API's I have ever had to work with in my career were just clearly designed to be 'RESTful' for the sake of being 'RESTful' and it was a nightmare to use them.
 
-</br>
+<br/>
 
 ## Unknown aspects of scaling
 
-These are **not** quite related to this project, but they open you eyes.
-This comment by Kasey Speakman is great: https://dev.to/rhymes/what-would-you-use-as-a-sortable-globally-unique-id-5akb#comment-f6em.
+These are **not** quite related to this project, but they open you eyes. This comment by Kasey Speakman is great: https://dev.to/rhymes/what-would-you-use-as-a-sortable-globally-unique-id-5akb#comment-f6em.
 
-Good SO answer: https://stackoverflow.com/a/47155318.
+Good SO answer: https://stackoverflow.com/a/47155318.  
+
 Regarding the answer below, it is better to enforce timestamp also in client-side. In other words clients should only send timestamp in their requests and receive timestamp in response. Otherwise many problems may occur. Imagine a request is sent and some fields are Date. The request is received in server and in the meantime the client experiences daylight saving. The response gets back to client. Especially imagine response is an error and client retries the request. Server **shouldn't** try to do the conversion from Date to timestamp. Because now server's perception of client timezone (which is based on running js runtime that is running on the server and has not arrived the next day (unlike client that has just arrived his next day and has just experienced daylight saving)) is considered different. You can imagine similar scenarios.
 
 But in any case, server should store as TIMESTAMP data-type in db, so that it can exploit date-time function provided by RDBMS.
