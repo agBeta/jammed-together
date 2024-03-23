@@ -1,6 +1,8 @@
 # HTTP & REST
 
-## Last-Modified
+## Some Headers
+
+### Last-Modified
 
 See [RFS 9110](https://www.rfc-editor.org/rfc/rfc9110#field.last-modified):   
 An origin server SHOULD send Last-Modified for any selected representation for which a last modification date can be reasonably and consistently determined, since its use in conditional requests and evaluating cache freshness ([CACHING]) can substantially reduce unnecessary transfers and significantly improve service availability and scalability.
@@ -8,7 +10,7 @@ An origin server SHOULD send Last-Modified for any selected representation for w
 According to DMN:  
 The `Last-Modified` response HTTP header contains a date and time when the origin server believes the resource was last modified. It is used as a validator to determine if the resource is the same as the previously stored one. Less accurate than an ETag header, it is a fallback mechanism. Conditional requests containing If-Modified-Since or If-Unmodified-Since headers make use of this field.
 
-## Content-Type
+### Content-Type
 
 *Based on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type)*  
 The Content-Type representation header is used to indicate the original media type of the resource (prior to any content encoding applied for sending).  
@@ -47,7 +49,7 @@ Content-Type: text/plain
 ```
 
 
-### urlencoded
+#### urlencoded
 
 [SO Question](https://stackoverflow.com/questions/4007969/application-x-www-form-urlencoded-or-multipart-form-data): In HTTP there are two ways to POST data: `application/x-www-form-urlencoded` and `multipart/form-data`. I understand that most browsers are only able to upload files if multipart/form-data is used?  
 
@@ -62,6 +64,39 @@ The MIME types you mention are the two `Content-Type` headers for HTTP POST requ
 For application/x-www-form-urlencoded, the body of the HTTP message sent to the server is essentially one giant query string -- name/value pairs are separated by the ampersand (&), and names are separated from values by the equals symbol (=). An example of this would be:  
 MyVariableOne=ValueOne&MyVariableTwo=ValueTwo
 
+
+### Allow
+
+The Allow header lists the set of methods supported by a resource. This header **must** be sent if the server responds with a 405 Method Not Allowed status code to indicate which request methods can be used. An empty Allow field value indicates that the resource allows no methods, which might occur in a 405 response if the resource has been temporarily disabled by configuration.
+
+```
+Allow: GET, POST, HEAD
+```
+
+
+## encoding
+
+In computers, encoding is the process of putting a sequence of characters (letters, numbers, punctuation, and certain symbols) into a specialized format for efficient transmission or storage. Decoding is the opposite process -- the conversion of an encoded format back into the original sequence of characters.
+
+*from [MDN character encoding](https://developer.mozilla.org/en-US/docs/Glossary/Character_encoding)*:  
+An encoding defines a mapping between bytes and text. A sequence of bytes allows for different textual interpretations. By specifying a particular encoding (such as UTF-8), we specify how the sequence of bytes is to be interpreted.
+
+The Encoding API provides a mechanism for handling text in various character encodings, including legacy non-UTF-8 encodings.
+
+### `TextEncoder`
+
+The TextEncoder interface takes a stream of code points as input and emits a stream of UTF-8 bytes.  
+`TextEncoder.encode()`:  Takes a string as input, and returns a Uint8Array containing UTF-8 encoded text.
+```js
+const encoder = new TextEncoder();
+const view = encoder.encode("€");
+console.log(view); // Uint8Array(3) [226, 130, 172]
+```
+
+**Note**: There is also `TextEncoderStream`. The TextEncoderStream interface of the Encoding API converts a stream of strings into bytes in the UTF-8 encoding. It is the streaming equivalent of TextEncoder.
+
+
+##
 
 ---
 
@@ -117,229 +152,304 @@ It is that or we implement some sort of cookie jar per origin that manages the c
 
 You can find all assigned status codes with link to their RFC in [this IANA link](https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml#http-status-codes-1).  
 
+Also you may see [Evert's blog](https://evertpot.com/http/).  
 
-
-##  keep-alive 
-https://stackoverflow.com/questions/61273417/node-js-express-js-set-keep-alive.
-
-</br>
-
-## `Allow` Header in 405
-
-According to https://www.rfc-editor.org/rfc/rfc7231#section-7.4.1, An origin server MUST generate an Allow field in a 405 (Method Not Allowed) response and MAY do so in any other response.
-
-## Why 409 for email already exists? Why not 400?
-
-Comment by Wrikken in https://stackoverflow.com/a/3826024: 400 => "The request could not be understood by the server due to malformed syntax". And the server understands perfectly, but is unable to comply due to a conflict. There is nothing wrong with the request & syntax, only a data problem. A 400 would instantly make me believe the whole mechanism I'm using is flawed, instead of just the data.
-
-Also read https://stackoverflow.com/a/70371989.
-
-</br>
-
-## session is not restful
-
-https://stackoverflow.com/a/7099156.
-https://stackoverflow.com/questions/7099087/why-is-form-based-authentication-not-considered-restful
-
-## 404 vs 400 vs 422
-
-422 was web-dav, but now is in standard http spec. See https://www.rfc-editor.org/rfc/rfc9110#name-422-unprocessable-content.
-inspired by this answer https://stackoverflow.com/questions/44915255/is-it-ok-return-http-status-404-in-the-post, 404 is better maybe.
-
-Also more about why 422 is better than 400 in some situation, see "leo_cape" comment and "Philippe Gioseffi" comment below [this SO answer](https://stackoverflow.com/a/52363900/22969951).
-
-According to https://stackoverflow.com/a/21488282, The most important thing is that you:
+[SO](https://stackoverflow.com/a/21488282), The most important thing is that you:
 
 -   Use the response code(s) consistently.
 -   Include as much additional information in the response body as you can to help the developer(s) using your API figure out what's going on.
 
 </br>
 
-## already logged in
-https://stackoverflow.com/questions/18263796/http-status-for-already-logged-in. Mentions a good point about REST.
+### `Allow` Header in 405
+
+According to https://www.rfc-editor.org/rfc/rfc7231#section-7.4.1, An origin server MUST generate an Allow field in a 405 (Method Not Allowed) response and MAY do so in any other response.
+
+### 409 for email already exists? not 400?
+
+[Comment by Wrikken](https://stackoverflow.com/a/3826024):  
+
+400 => "The request could not be understood by the server due to malformed syntax". And the server understands perfectly, but is unable to comply due to a conflict. There is nothing wrong with the request & syntax, only a data problem. A 400 would instantly make me believe the whole mechanism I'm using is flawed, instead of just the data.
+
+### 404 for POST?
+
+[SO question 404 for POST](https://stackoverflow.com/questions/44915255/is-it-ok-return-http-status-404-in-the-post):
+One of this scenarios is the response for POST requests. Per example, a POST method for an endpoint /orders/ receive some informations, like a `customer`. So, my questions is: if this number from `customerDocument` not exists, is it Ok to return a 404 status code error with a nice message telling that the customer was not found?
+
+*Answer*  
+I think 400 is the appropriate status code in this scenario.
+
+According to the description, semantically, 422 is better ("The request was well-formed but was unable to be followed due to semantic errors."). However, 422 is introduced for WebDAV, so it is better to use general purpose status code such as 400.
+
+400 is not the perfect status code, as whether document number exists or valid is not so apparent. However, excludes special-purpose status code such as 422, 400 is the best option.
+
+Why 404 is **not** appropriate?  
+From RESTful API point of view, endpoint /orders/ is a resource, no matter it accepts GET or POST or something else. 404 is only appropriate when the resource /orders/ itself does not exist. If /orders/ endpoint exist, but its invocation failed (no matter what reasons), the response status code must be something other than 404.
+
+### 422
+
+[SO](https://stackoverflow.com/questions/51990143/400-vs-422-for-client-error-request):  
+
+HTTP is an extensible protocol and 422 is registered in IANA, which makes it a standard status code. So nothing stops you from using 422 in your application. And since June 2022, 422 **is defined** in the RFC 9110, which is the document that currently defines the semantics of the HTTP protocol:
+
+> Status code 422 (previously defined in Section 11.2 of RFC 4918) has been added because of its general applicability.
+
+HTTP status codes are sometimes not sufficient to convey enough information about an error to be helpful. 
+
+It seems Rails also use 422 for validation errors.
+
+Though 422 is more appropriate in some situation. see "leo_cape" comment and "Philippe Gioseffi" comment below [this SO answer](https://stackoverflow.com/a/52363900/22969951).
 
 </br>
 
-## Don't use 1xx responses
+### already logged in
 
-https://stackoverflow.com/a/51255297.
+[SO](https://stackoverflow.com/questions/18263796/http-status-for-already-logged-in)  
 
-</br>
+Here's why... The way I see it, you have two different scenarios from the perspective of the API: new login and re-login. programmatically there is a difference. But, from the perspective of the API consumer, all the consumer wants to know is if login was successful, which it was.
 
-## Don't use 200 without response
+*comments:*  
 
-systemPAUSE Nice answer. One small point: if you are not going to be returning a response body to a successful operation, I would suggest using a 204 exclusively. Some clients (jQuery Ajax, for example) will choke if they are expecting a non-zero length response but don't get it. You can see an example of this in https://stackoverflow.com/questions/20928929/jquery-ajax-call-executes-error-on-200/20929815. – nick_w
+So it's basically idempotent. Makes sense. -- mahemoff
 
-</br>
+What if another user is logged in? – soslan
 
-## A good question for batch job and a good comment
-https://stackoverflow.com/questions/9794696/which-http-status-code-means-not-ready-yet-try-again-later?noredirect=1&lq=1.
-comment Andy Dennie: by First, if thingy 1234 does not yet have any GET-able representation, in what sense does it exist as a resource (from the client's perspective)? The fact that, internal to the server there is a queued job to create 1234, doesn't seem to imply that resource 1234 exists. Second, where did the client get the URI .../thingyblob/1234? The server probably shouldn't have provided that URI to the client until the resource was actually GET-able.
 
 </br>
 
-## DELETE 
-https://www.rfc-editor.org/rfc/rfc7231#section-4.3.5.
-The server may archive the resource. It just have to destroy mapping. rfc says so.
-Also it is Idempotent, according to [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/DELETE).
+###  200 without body?
 
-</br>
+One small point: if you are not going to be returning a response body to a successful operation, I would suggest using a 204 exclusively. Some clients (jQuery Ajax, for example) will choke if they are expecting a non-zero length response but don't get it. You can see an example of this in [this SO](https://stackoverflow.com/questions/20928929/jquery-ajax-call-executes-error-on-200/20929815). – nick_w
 
-## 418 teapot
-With the onset of IoT, this protocol may actually be a viable protocol at some point. If I ever made an IoT teapot, you can rest assured this protocol would be used. – Brandon Miller comment. See https://stackoverflow.com/questions/52340027/is-418-im-a-teapot-really-an-http-response-code.
 
-But https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.19, Therefore, the 418 status code is reserved in the IANA HTTP Status Code Registry. This indicates that the status code cannot be assigned to other applications currently. If future circumstances require its use (e.g., exhaustion of 4NN status codes), it can be re-assigned to another use.
-
-</br>
+---
 
 ## PUT
-I think one cannot stress enough the fact that PUT is idempotent: if the network is botched and the client is not sure whether his request made it through, it can just send it a second (or 100th) time, and it is guaranteed by the HTTP spec that this has exactly the same effect as sending once. –  Jörg W Mittag. (Also see https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PUT).
 
-If I'm not mistaken, what we should be stressing is that PUT is defined to be idempotent. You still have to write your server in such a way that PUT behaves correctly, yes? Perhaps it's better to say "PUT causes the transport to assume idempotence, which may affect behavior of the transport, e.g. caching." – Ian Ni-Lewis
+[SO](https://stackoverflow.com/questions/630453/what-is-the-difference-between-post-and-put-in-http)  
 
-from the other side of the fence: PUT if the client determines the resulting resource's address, POST if the server does it. – DanMan
+I think one cannot stress enough the fact that PUT is idempotent: if the network is botched and the client is not sure whether his request made it through, it can just send it a second (or 100th) time, and it is guaranteed by the HTTP spec that this has exactly the same effect as sending once. –  Jörg W Mittag. (Also see [MDN PUT](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PUT)).
 
-All comments above are from https://stackoverflow.com/questions/630453/what-is-the-difference-between-post-and-put-in-http.
+If I'm not mistaken, what we should be stressing is that PUT is defined to be idempotent. You **still** have to write your server in such a way that PUT behaves correctly, yes? Perhaps it's better to say "PUT causes the transport to **assume** idempotence, which may affect behavior of the transport, e.g. caching." – Ian Ni-Lewis
+
+## Idempotent
+
+*based on MDN and [RFC 7231 4.2.2](https://datatracker.ietf.org/doc/html/rfc7231#section-4.2.2)*  
+
+An HTTP method is idempotent if the intended effect **on the server** of making a single request is the same as the effect of making several identical requests.
+
+This does not necessarily mean that the request does not have any unique side effects: for example, the server may log every request with the time it was received. Idempotency only applies to effects intended by the client: for example, a POST request intends to send data to the server, or a DELETE request intends to delete a resource on the server. All safe methods are idempotent, as well as PUT and DELETE. The POST method is not idempotent.
+
+To be idempotent, only the state of the server is considered. The response returned by each request may differ: for example, the first call of a DELETE will likely return a 200, while successive ones will likely return a 404.
+
+[SE Exchange](https://softwareengineering.stackexchange.com/questions/429393/does-put-need-to-be-idempotent):  
+Because GET and PUT requests have idempotent semantics, duplicate copies of the same request mean the same thing. One useful consequence of that is we can automatically retry those requests if the response is lost - a very useful property when the message transport is unreliable.
+
+But it **doesn't mean** that the request handler MUST handle the request in an idempotent way. What it means is that the implementation is responsible for any loss of property caused by the fact that the implementation doesn't respect the semantics of the request.
+
+## Cacheable
+
+[MDN](https://developer.mozilla.org/en-US/docs/Glossary/Cacheable)  
+
+These are the constraints for an HTTP response to be cacheable:
+
+- The method used in the request is cacheable, that is either a GET or a HEAD method. A response to a POST or PATCH request can also be cached if freshness is indicated. Other methods, like PUT or DELETE are not cacheable and their result cannot be cached.
+
+- The status code of the response is known by the application caching, and is cacheable. The following status codes are cacheable: 200, 203, 204, 206, 300, 301, 404, 405, 410, 414, and 501.
+
+- There are no specific headers in the response, like `Cache-Control`, with values that would prohibit caching.
+
+Note that some requests with non-cacheable responses to a specific URI may invalidate previously cached responses from the same URI. For example, a PUT to /pageX.html **will invalidate** all cached responses to GET or HEAD requests to /pageX.html.
+
+See also [RFC 9111 about HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111.html).
+
+### Cache-Control
+
+The `Cache-Control` HTTP header field holds directives (instructions) — in **both** requests and responses — that control caching in browsers and shared caches (e.g. Proxies, CDNs).
+
+Why `Cache-Control` in request?
+
+[SO](https://stackoverflow.com/questions/42652931/why-use-cache-control-header-in-request/42653090#42653090):  
+
+There may be any number of intermediate proxies between the client and server which do caching. The client can explicitly request explicit caching behaviour from any and all caching entities, things like: 
+
+- max-age - "I don't want a response older than X"
+- no-cache - "I want a fresh response"
+
+*comment* :  
+An example where the client's request is not honoured is the CloudFlare cache which ignores you to avoid DoS attacks as described here https://community.cloudflare.com/t/request-no-cache-header-is-ignored-by-cloudflare/201653 – sparrowt.
+
+
+
+### Question
+
+*from [jake archibald's blog](https://jakearchibald.com/2016/caching-best-practices/)*   
+
+Note that you can purge cache on Cloudflare, but it could still be cached elsewhere between client and server, e.g. by your ISP or the end-user's ISP.   
+Archibald's answer: Not, since I serve over HTTPS.
+
+### Security
+
+When users would logout of their profile they could navigate back and view the pages as if they were logged in. This could be potentially harmful when you are on a public or shared computer. Obviously you should trust the website that the logout button forgets all trace of you ever logging in. After a short investigation we found that an update a couple days prior removed the `Cache-Control` header.
+
+According to [MDN Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control):   
+
+The `private` **response** directive indicates that the response can be stored only in a private cache (e.g. local caches in browsers). You **should add** the `private` directive for user-personalized content, **especially** for responses received after login and for sessions managed via cookies. If you forget to add `private` to a response with personalized content, then that response can be stored in a shared cache and end up being reused for multiple users, which can cause personal information to leak.
+
+
+### Caching best practices
+
+Note: `no-cache` doesn't mean "don't cache", it means it must check (or "revalidate" as it calls it) with the server before using the cached resource. `no-store` tells the browser not to cache it at all. Also `must-revalidate` doesn't mean "must revalidate", it means the local resource can be used if it's younger than the provided `max-age`, otherwise it must revalidate.
+
+#### Pattern 1 
+(Immutable content, long max-age)
+
+`Cache-Control: max-age=31536000`  
+The content at this URL never changes, therefore… The browser/CDN can cache this resource for a year without a problem. Cached content younger than max-age seconds can be used without consulting the server. In this pattern, you never change content at a particular URL, you change the URL. Each URL contains something that changes along with its content..
+
+#### Pattern 2 
+(Mutable content, always server-revalidated)
+
+`Cache-Control: no-cache`  
+The content at this URL may change, therefore…
+Any locally cached version isn't trusted without the server's say-so.
+
+![image0024](image0024.png)
+
+In this pattern you can add an `ETag` (a version ID of your choosing) or `Last-Modified` date header to the response. Next time the client fetches the resource, it echoes the value for the content it already has via `If-None-Match` and `If-Modified-Since` respectively, allowing the server to say "Just use what you've already got, it's up to date", or as it spells it, "HTTP 304".
+
+If sending `ETag` / `Last-Modified` isn't possible, the server always sends the full content.
+
+This pattern always involves a network fetch, so it isn't as good as pattern 1 which can bypass the network entirely.
+
+#### Wrong Pattern
+(max-age on mutable content)
+
+It's not uncommon to be put off by the infrastructure needed for pattern 1, but be similarly put off by the network request pattern 2 requires, and instead go for something in the middle: a smallish max-age and mutable content. This is a **bad compromise**.
+
+`Cache-Control: must-revalidate, max-age=600`  
+Imagine content at the URLs changes. If the browser has a cached version less than 10 minutes old, use it without consulting the server. Otherwise make a network fetch, using `If-Modified-Since` or `If-None-Match` if available.
+
+`max-age` is relative to the response time, so if all the above resources are requested as part of the same navigation they'll be set to expire at roughly the same time, but there's still the small possibility of a race there. If you have some pages that don't include the JS, or include different CSS, your expiry dates can get out of sync. And worse, the browser drops things from the cache all the time, and it doesn't know that the HTML, CSS, & JS are interdependent, so it'll happily drop one but not the others. Multiply all this together and it becomes not-unlikely that you can end up with mismatched versions of these resources.
+
+`max-age` on mutable content is often the wrong choice, but not always. This pattern shouldn't be used lightly. If I added a new section to one article and linked to it in another article, I've created a dependency that could race. The user could click the link and be taken to a copy of the article without the referenced section. If I wanted to avoid this, I'd update the first article, flush Cloudflare's cached copy using their UI, wait three minutes, then add the link to it in the other article.
+
+
+### Types of caches
+
+*from [MDN HTTP Caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching)*  
+In the HTTP Caching spec, there are two main types of caches: private caches and shared caches.
+
+A **private cache** is a cache tied to a specific client — typically a browser cache. Since the stored response is not shared with other clients, a private cache can store a personalized response for that user. If a response contains personalized content and you want to store the response only in the private cache, you must specify a `private` directive.
+```
+Cache-Control: private
+```
+
+The **shared cache** is located between the client and the server and can store responses that can be shared among users. And shared caches can be further sub-classified into proxy caches and managed caches.
+
+In recent years, as HTTPS has become more common and client/server communication has become encrypted, **proxy caches** in the path can only tunnel a response and can't behave as a cache, in many cases. So in that scenario, there is no need to worry about outdated proxy cache implementations that cannot even see the response.
+
+On the other hand, **if** a TLS bridge proxy decrypts all communications in a person-in-the-middle manner by installing a certificate from a CA (certificate authority) managed by the organization on the PC, and performs access control, etc. — it is possible to see the contents of the response and cache it. However, since CT (certificate transparency) has become widespread in recent years, and some browsers only allow certificates issued with an SCT (signed certificate timestamp), this method requires the application of an enterprise policy. In such a controlled environment, there is **no need** to worry about the proxy cache being "out of date and not updated".
+
+**Managed caches** are explicitly deployed by service developers to offload the origin server and to deliver content efficiently. Examples include reverse proxies, CDNs, and service workers in combination with the Cache API.
+  
+It is also possible to ignore the standard HTTP Caching spec protocols in favor of explicit manipulation. For example, `Cache-Control: no-store` can be specified to opt-out of a private cache or proxy cache, while using your own strategy to cache only in a managed cache.
+
+### (Re)validation & `ETag`
+
+Stale responses are not immediately discarded. HTTP has a mechanism to transform a stale response into a fresh one by asking the origin server. This is called validation, or sometimes, revalidation. Validation is done by using a conditional request that includes an `If-Modified-Since` or `If-None-Match` request header.
+
+The server can obtain the modification time from the operating-system file system, which is relatively easy to do for the case of serving static files. However, there are some problems; for example, the time format is complex and difficult to parse, and distributed servers have difficulty synchronizing file-update times.
+
+To solve such problems, the `ETag` response header was standardized as an alternative.
+
+The value of the `ETag` response header is an arbitrary value generated by the server. There are no restrictions on how the server must generate the value, so servers are free to set the value based on whatever means they choose — such as a hash of the body contents or a version number. 
+
+
+### What's lost by `no-store`
+
+You may think adding no-store would be the right way to opt-out of caching. However, it's **not** recommended to grant no-store liberally, because you lose many advantages that HTTP and browsers have, including the browser's back/forward cache. Therefore, to get the advantages of the full feature set of the web platform, prefer the use of `no-cache` in combination with `private`.
+
+### API caching
+
+[SO](https://stackoverflow.com/questions/58428814/should-i-add-cache-control-no-cache-to-get-endpoints-of-my-rest-api):  
+What is the best practice for avoiding stale data for GET requests?
+There seem to be different strategies to solve this problem, but what would be the best way?
+
+- cache-busting my GET calls via unique query string? eg. `GET /articles/123/comments?nonce=12312310980923409`
+- adding `Cache-Control: no-cache` (will this always be respected?)
+- adding `ETag: xyz_HASH_OF_MY_LIST_OF_COMMENTS`?
+- adding `Cache-Control: max-age=0` (to disable caching)
+- adding `Cache-Control: max-age=60` (to reduce max duration of caching)
+- just don't worry and assume that without headers like ETag, Last-Modified the GET request won't be cached by any of the browsers?
+
+Answer:  
+To a browser GET requests look the same, no matter if they originated by JavaScript to your REST API or by you entering an URL in the address bar.
+
+What happens if you don't set the caching headers? The spec allows the browser to do whatever it wants. By default, browsers cache responses to GET requests and use a "best guess" approach for the duration.
+
+You **should always** set the caching explicitly to get consistent behavior.
+
+[Answer from another SO](https://stackoverflow.com/questions/26588705/using-http-for-rest-api-automatically-cacheable?rq=3):  
+
+Let me expand a bit on the challenges of creating correct caching logic: Typically, the backend of the API is a database holding all kinds of little pieces of information. The typical presentation within a REST API can be an accumulated view (So, let's say, a users activity log, containing a list of the last user actions within a portal, something along those lines). Now, in order to know if your API URL /user/123/activity has changed (after the timestamp the client is sending you in the "If-modified-since"-header), you would have to check if there have been any additional activities after the last request. The overhead of doing that might be the same as simply fetching the result again. So, in a lot of cases, people just don't really bother, which is a shame, as proper caching can have a huge impact on Web App performance.
+
+### More
+
+[SO](https://stackoverflow.com/questions/64331735/how-to-prevent-http-caching-of-rest-calls-in-browser):  
+You can disable cache in `fetch()` by appending in headers.
+```js
+var headers = new Headers();
+headers.append('pragma', 'no-cache');
+headers.append('cache-control', 'no-cache');
+
+var init = {
+  method: 'GET',
+  headers: headers,
+};
+var request = new Request(YOUR_URL);
+
+fetch(request, init)
+```
+Alternatively, you can use a dynamic string in URL, it will still store a version in your browser's cache.
+```js
+const ms = Date.now();
+const data = await fetch(YOUR_URL+"?t="+ms)
+```
+This is just adding a dummy parameter that changes on every call to a query.
+
+---
+
+## CORS
+
+Cross-Origin Resource Sharing (CORS) is an HTTP-header based mechanism that allows a server to indicate any origins (domain, scheme, or port) other than its own from which a browser should permit loading resources. CORS also relies on a mechanism by which browsers make a "preflight" request to the server hosting the cross-origin resource, in order to check that the server will permit the actual request. In that preflight, the browser sends headers that indicate the HTTP method and headers that will be used in the actual request.
+
+An example of a cross-origin request: the front-end JavaScript code served from https://domain-a.com uses fetch() to make a request for https://domain-b.com/data.json.
+
+For security reasons, browsers restrict cross-origin HTTP requests initiated from scripts. For example, fetch() and XMLHttpRequest follow the same-origin policy. This means that a web application using those APIs can only request resources from the same origin the application was loaded from unless the response from other origins includes the right CORS headers.
+
 
 </br>
 
-## Exposing userId and postId
-
-It seems ok. It is not data security risk. But might be business intelligence security risk. See https://stackoverflow.com/a/32144572.
-
-Exposing hashed ids for data security is complete pointless. See https://stackoverflow.com/a/32144572/. Unless you encrypt or hash your ids Using session id as a salt. But is an over-kill and also creates its own problems. See https://stackoverflow.com/a/10036069.
-
-</br>
-
-## Fundamentals
-
-### Cache
-
-Cacheable methods and status codes: [MDN Cacheable](https://developer.mozilla.org/en-US/docs/Glossary/Cacheable).
-
-Also https://jakearchibald.com/2016/caching-best-practices/.
-Note that you can purge cache on Cloudflare, but it could still be cached elsewhere between client and server, e.g. by your ISP or the end-user's ISP. ---> Archibald's answer: Not, since I serve over HTTPS.
-
-A very good detailed answer on GET cache (and also when it isn't idempotent). https://stackoverflow.com/a/65038716. Also read comment by  
-tmdesigned. Quoting from answer:
-... Deviating from them sets yourself up for failure in many ways. (For instance, there are different security expectations for requests based on method. A browser may treat a GET request as "simple" from a CORS perspective, while it would never treat a PATCH request as such.).
-
-According to https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching:
-However, in recent years, as HTTPS has become more common and client/server communication has become encrypted, proxy caches in the path can only tunnel a response and can't behave as a cache, in many cases. So in that scenario, there is no need to worry about outdated proxy cache implementations that cannot even see the response.
-Also read about private cache in the same article. Don't blindly use public,max-age=... .
-
-Also read about Managed caches: For example, the following `Cache-Control: no-store` can be specified to opt-out of a private cache or proxy cache, while using your own strategy to cache only in a managed cache.
-
-Also about [Heuristic caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#heuristic_caching), Quoting:
-... even if no Cache-Control is given, responses will get stored and reused if certain conditions are met.
-How long to reuse is up to the implementation (i.e. browser), but the specification recommends about 10% (in this case 0.1 year) of the time after storing.
-
-Expires or max-age --> As summary, use max-age.
-
-https://stackoverflow.com/questions/58428814/should-i-add-cache-control-no-cache-to-get-endpoints-of-my-rest-api.
-
-Also it is important to know that response will be cached only if it meets some criteria. Read more on RFC https://datatracker.ietf.org/doc/html/rfc9111#name-storing-responses-in-caches.
-
-image might be cached even without response last-modified. See https://stackoverflow.com/a/5478460.
-https://stackoverflow.com/a/5500176.
-
-According to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control: You **should add** the private directive for user-personalized content, **especially** for responses received after login and for sessions managed via cookies. If you forget to add private to a response with personalized content, then that response can be stored in a shared cache and end up being reused for multiple users, which can cause personal information to leak.
-
-Cache private sometimes is not respected. See KrekkieD comment in https://stackoverflow.com/a/9884934.
-Also this https://stackoverflow.com/a/9886945.
-
-Also this https://stackoverflow.com/questions/64331735/how-to-prevent-http-caching-of-rest-calls-in-browser.
-Also this is great https://stackoverflow.com/questions/29246444/fetch-how-do-you-make-a-non-cached-request. and https://stackoverflow.com/a/31993927.
-
-### Cache-control in client
-
-Also https://stackoverflow.com/questions/14541077/why-is-cache-control-attribute-sent-in-request-header-client-to-server. Cache-Control: no-cache is generally used in a request header (sent from web browser to server) to force validation of the resource in the intermediate proxies.
-Also https://stackoverflow.com/questions/42652931/why-use-cache-control-header-in-request/42653090#42653090.
-An example where the client's request is not honoured is the CloudFlare cache which ignores you to avoid DoS attacks as described here ... – sparrowt --> like is https://community.cloudflare.com/t/request-no-cache-header-is-ignored-by-cloudflare/201653.
-
-Also be ware of dns lookup in client-side caching for specific directives. See great SO answer here https://stackoverflow.com/questions/23603023/file-caching-query-string-vs-last-modified?noredirect=1&lq=1.
-
-</br>
-
-### Idempotent POST, PUT
-
-https://stackoverflow.com/questions/33249708/can-a-restful-post-method-be-implemented-to-be-idempotent.
-If a POST creates a new resource, then it SHOULD send a 201 (Created) response containing a Location header identifying the created resource.
-
-According to https://stackoverflow.com/questions/442678/preventing-double-http-post:  
-sud_shan comment:: Your solution to the problem is fine. But a hidden field can be viewed by client and can be edited by him to spoil our application which may accept double form again. I am searching for a solution which is completely oriented to server.  
-Dherik comment:: If you have some load balancer, send a UUID (or any type of unique number) to the server to store and read again will not work well if the server is not aware about other servers, because each request could be processed by a different server.
-Detection of duplicates is a kludge, and can get very complicated. Genuine distinct but similar requests can arrive at the same time, perhaps because a network connection is restored.
-
-**Very very good technique**
-Quoting from https://docs.google.com/document/d/1s0joc0yb6kXpXZGfdE9SRutoPQuK9RVa77f92xsXzrM/edit:
-For any given request, a client, in the absence of a definitive result, may not know if the request fell in the water on its way, or if the response fell in the water on its way back.  
-If they don’t get a response to a PUT or DELETE, how do they replay the request without wiping out other people’s modifications that may have happened between times?
-Also from document: ... To be thorough, a good please-be-patient response should contain an expected delay and/or a cancel link ...
-https://stackoverflow.com/a/35429135/.
-Someone else: ... thanks, but it'd be awfully heavy weight for servers to implement since they'd have to maintain a history of all the actions performed and the responses they generated.  
-Response comment by bbsimonbb (author of article above): "Awfully" is a bit strong ! Responses will be tiny, a fraction of a kilobyte. If you had huge volumes, you could use an ACID key value store (couchDB? ⤵📔) just for storing responses. The payments web-service where I first used this pattern has been ticking away happily for 15 years atop a SQL Server DB. It's so simple to develop, to integrate with and to support that I find myself agog at the other answers to this problem. You can't not have noticed: Among all the RESTful discussion of how you should deal with this, no-one talks about their experience, their problems, their volumes. – bbsimonbb
-
-Also another answer (from the same person) in another post: https://stackoverflow.com/a/35453041.
-I say that I prefer server generated ids because it increases the likelihood of clients behaving responsibly. There are no guarantees, but the developers calling your api want to "do the right thing" just as much as you do, as a general rule. With this pattern, unambiguous interaction is at least possible. Directly addressing unsafe requests to "real" resources has led us into a world of pain and kludges.
-
-📔 Current project doesn't need to store history of all responses of idempotent requests. It just expires the action link after some amount of time. Just like payment verification systems or tapsi payment callback page. Especially in currently designed pattern of our project, client can GET the action in case of any error to see if it is expired. But one can imagine there might be a situation that it is necessary to store all responses. Like for example, the client cannot GET a action id (like for security reasons or if GET will initiate a slow method in downstream parties (like database is tuned to be write-only), etc.), and/or action ids aren't kept in some database (but are self-signed like JWT, etc.), and/or re-POST-ing in the same action id link will decrease something like credit or score of the user (like a user is only allowed to consume X amount of power/instructions from the server). Anyway in this project it is completely UNnecessary to store all responses of idempotent requests. But it doesn't argue against the idea of storing history of all.
-
-According to the answer (same link above): Other people often suggest you create the resource with an empty POST, then, once the client has the id of the newly created resource, he can do an "idempotent" update to fill it. This is nice, but you will likely need to make DB columns nullable that wouldn't otherwise be, and your updates are **only** idempotent **if** no-one else is trying to update at the same time.
-
-Also in the comments: I'm all for good style, but your solution includes an additional roundtrip just for conceptual soundness. And I'm actually very fond of the idea of non-centralized id's, which can be easily accomplished by using a random 128-bit UUID. Nevertheless, it surprises me that I can't seem to find an authoritative source that addresses this (very common - I'd say) problem. – wvdz
-
-Extra (added by yourself): We are sacrificing one round-trip just to generate an actionId, whereas we could do that in client-side.
-But it is ok, for two reasons:
-First: How many POST,PUT,PATCH requests does a particular client makes comparing to GET requests? Meaning, we only use this for PUT, POST and PATCH requests that need idempotency. But these requests make up only a small portion of all requests that a client will send. So there is no significant slow-down in client. Second: explained as comment in @version in `action.js` file.
-
-### Race condition (like in ticket reservation system)
-
-https://stackoverflow.com/a/26175863.
-Database level This is the preferred solution. You obtain the lock on the record in the database before you update. SQL provides an option for selecting the record for update.
-SELECT \* FROM BUS_SEATS WHERE BUS_ID = 1 FOR UPDATE;
-
-Also there is an interesting trick (although probably not quite practical in most cases), session lock. (Only possible with single process) Enabling sessions and using session will cause implicit locking between requests from the same user (session). Session["TRIGGER_LOCKING"] = true;  
-But it seems this trick can be used if we have layer 4 load balancer.
-
-</br>
-
-## session id
-
-It is useless to encrypt it for cookie, see https://stackoverflow.com/questions/2840559/is-encrypting-session-id-or-other-authenticate-value-in-cookie-useful-at-all. But if the random number was not cryptographically secure, encrypting it with a server side key will produce better security. See AJ Henderson comment.
-
-### hashing session id
-
-https://security.stackexchange.com/questions/244696/how-to-securely-store-and-use-session-ids.
-https://security.stackexchange.com/a/97840. If session identifier is randomly chosen from sufficiently
-big space (something like 12 bytes should be more then enough) then any non-invertible hash function (even md5)
-will be secure, and there will be no need for salt (rainbow tables of this size are infeasible). To expand, problem
-when storing password hash is that passwords usually have very low entropy (unlike tokens, like session id for
-example).
-https://security.stackexchange.com/questions/24850/choosing-a-session-id-algorithm-for-a-client-server-relationship?rq=1.
-
-Now https://blog.shevlyagin.com/2021/10/28/fastest-node-js-hashing-algorithm-for-large-strings/.
-https://stackoverflow.com/questions/3183841/base64-vs-hex-for-sending-binary-content-over-the-internet-in-xml-doc.
-
-</br>
-
-## signed cookies And HTTP
+## Signed cookies
 
 Good for time-limited-form-submission (anti-spam) without having to store any data on the server side.
-https://stackoverflow.com/questions/3240246/signed-session-cookies-a-good-idea.
+See https://stackoverflow.com/questions/3240246/signed-session-cookies-a-good-idea.
 
 According to https://stackoverflow.com/a/3240427:
 They should be kept private, so that attackers cannot steal them and impersonate an authenticated user. Any request that performs an action that requires authorization should be tamper-proof. That is, the entire request must have some kind of integrity protection such as an HMAC so that its contents can't be altered. For web applications, these requirements lead inexorably to HTTPS.
 
 </br>
 
-## important thing about REST
+## REST
 
 Let's give you the answer right now: We don't care. We made some ad-hoc decisions.
 **BUT...** It is important to be aware of trade-offs, and hidden costs behind these decision.
 
-Imagine /posts?page=1 (ignore bad pagination style for now). Imagine each post has authorId (i.e. userId). To prevent N+1 problem it is usually recommended to attach name and avatar picture of authorId directly to the post. This [youtube video](https://www.youtube.com/watch?v=JxeTegu4dD8) the presenter recommends the aforementioned optimizations to prevent N+1 problem. But regarding this ad-hoc decision, there a comment by @ugentu:
----start of comment---
+Imagine `GET /posts?page=1` (ignore bad pagination style for now). Imagine each post has authorId (i.e. userId). To prevent N+1 problem it is usually recommended to attach name and avatar picture of authorId directly to the post. This [youtube video](https://www.youtube.com/watch?v=JxeTegu4dD8) the presenter recommends the aforementioned optimizations to prevent N+1 problem. But regarding this ad-hoc decision, there is a comment.
+
+*comment by ugentu*:  
+
 Thanks for the great review of the main concepts! Sounds valuable as a base.
 But can't mention that "Optimisation" advice is completely out of REST principles. One of the REST principles is, roughly speaking, resource-per-URI. Violating it with such entities folding, you may achieve quick improvement, but with a big price to pay later.
 
@@ -378,52 +488,19 @@ From another comment: ...You advice is effective for HTTP interactions but from 
 If minimizing HTTP calls is optimal for your use cases and you want to aggregate data across entities, look at something else, i.e. OData, GraphQL, etc.
 
 **But...** there is another comment which shows the other side of trade-off:
-@sfulibarri
+
+
+*comment by sfulibarri*:  
 The biggest mistake any dev can make when building a REST API is spending hours and hours agonizing over if every little thing is 'RESTful' or not. Just get it working, you will understand more about the problem space as you work and be able to make better decisions. Trying to design for some extremely vague principals of 'RESTfulness' from the get go will only cause you pain and more often than not, unless you are building an explicitly public API, the only thing that matters is that your endpoints provide the needed functionality and behave according to the documentation. Most of the worst API's I have ever had to work with in my career were just clearly designed to be 'RESTful' for the sake of being 'RESTful' and it was a nightmare to use them.
 
 </br>
 
 ## Unknown aspects of scaling
 
-These are **not** quite related to this project. But they open you eyes.
+These are **not** quite related to this project, but they open you eyes.
 This comment by Kasey Speakman is great: https://dev.to/rhymes/what-would-you-use-as-a-sortable-globally-unique-id-5akb#comment-f6em.
 
 Good SO answer: https://stackoverflow.com/a/47155318.
 Regarding the answer below, it is better to enforce timestamp also in client-side. In other words clients should only send timestamp in their requests and receive timestamp in response. Otherwise many problems may occur. Imagine a request is sent and some fields are Date. The request is received in server and in the meantime the client experiences daylight saving. The response gets back to client. Especially imagine response is an error and client retries the request. Server **shouldn't** try to do the conversion from Date to timestamp. Because now server's perception of client timezone (which is based on running js runtime that is running on the server and has not arrived the next day (unlike client that has just arrived his next day and has just experienced daylight saving)) is considered different. You can imagine similar scenarios.
 
 But in any case, server should store as TIMESTAMP data-type in db, so that it can exploit date-time function provided by RDBMS.
-
-
-Sharding & IDs at Instagram: https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c.
-
-
-## Naming conventions
-https://stackoverflow.com/a/18450653. You should use hyphens in a crawlable web application URL. Why? Because the hyphen separates words (so that a search engine can index the individual words).
-
-## Redirect 3xx
-Why 301 for blog_GET? https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#permanent_redirections.
-Also https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301.
-Use the 301 code only as a response for GET or HEAD methods .
-
-
-## misc but useful
-https://stackoverflow.com/questions/2239405/hateoas-absolute-or-relative-urls
-
-## Concepts
-
-### CDN
-
-A CDN (Content Delivery Network) is a group of servers spread out over many locations. These servers store duplicate copies of data so that servers can fulfill data requests based on which servers are closest to the respective end-users. CDNs make for fast service less affected by high traffic.
-
-CDNs are used widely for delivering stylesheets and JavaScript files (static assets) of libraries like Bootstrap, jQuery etc. Using CDN for those library files is preferable for a number of reasons:
-
-- Serving libraries' static assets over CDN lowers the request burden on an organization's own servers.  
-- Most CDNs have servers all over the globe, so CDN servers may be geographically nearer to your users than your own servers. Geographical distance affects latency proportionally.
-- CDNs are already configured with proper cache settings. Using a CDN saves further configuration for static assets on your own servers.
-
-
-### MIME type
-
-A MIME type (now properly called "media type", but also sometimes "content type") is a string sent along with a file indicating the type of the file (describing the content format, for example, a sound file might be labeled audio/ogg, or an image file image/png).
-
-It serves the same purpose as filename extensions traditionally do on Windows. The name originates from the MIME standard originally used in email.
