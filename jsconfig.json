@@ -10,8 +10,13 @@
     },
     "include": [
         "./**/*.js",
-        "/*.js"
+        "/*.js",
+        "dijkstra/dijkstra.cjs"
     ],
-    "exclude": [ "./**/node_modules" ],
-    "types": [ "node" ]
-}   
+    "exclude": [
+        "./**/node_modules"
+    ],
+    "types": [
+        "node"
+    ]
+}
