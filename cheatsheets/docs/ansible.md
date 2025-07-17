@@ -2,6 +2,7 @@
 
 Table of contents:
 - [Installation](#installation)
+- [Variables](#variables)
 - [Inventory](#inventory)
 - [Best Practices](#best-practices)
   - [Content Organization (a.k.a Folder structure)](#content-organization)
@@ -10,6 +11,8 @@ Table of contents:
   - [lineinfile (modify line a text file)](#lineinfile)
   - [blockinfile](#blockinfile)
   - [apt](#apt)
+- [Ansible Vault](#ansible-vault)
+- [Roles](#roles)
 
 ---
 
@@ -79,6 +82,19 @@ Once you're finished working inside your Python virtual environment run `deactiv
 
 > ansible -m setup localhost
 ```
+
+## Configuration
+
+_(based on [docs](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#the-configuration-file))_
+
+Changes can be made and used in a configuration file which will be searched for in the following **order**:
+
+- ANSIBLE_CONFIG (environment variable if set)
+- ansible.cfg (in the **current** directory)
+- ~/.ansible.cfg (in the home directory)
+- /etc/ansible/ansible.cfg
+
+
 
 </br>
 
@@ -778,6 +794,20 @@ dependencies:
       dbname: blarg
       other_parameter: 12
 ```
+
+---
+
+</br>
+
+## Modules
+
+see [this SO](https://stackoverflow.com/a/48991660)
+
+---
+
+## Deep Dive
+
+
 
 ---
 
