@@ -75,6 +75,8 @@ mysql -h <hostname> -P <port> -u <username> -p<password> <database_name>
 mariadb -h <..same as above..>
 ```
 
+For configuring network and `bind-address`, see [the other file](./mariadb-admin-misc.md#network) or [Configuring MariaDB for Remote Client Access Guide](https://mariadb.com/docs/server/mariadb-quickstart-guides/mariadb-remote-connection-guide).
+
 #### Delete Anonymous users
 
 ```sql
@@ -169,8 +171,8 @@ see also [rotating logs on unix (mariadb)](https://mariadb.com/kb/en/rotating-lo
 To activate binary log, you should modify `log_bin` (NOT ~~`%bin_log%` variables~~).
 
 ```sql
-SHOW VARIABLE LIKE 'log_bin';
-SHOW VARIABLE LIKE '%binlog%';
+SHOW VARIABLES LIKE 'log_bin';
+SHOW VARIABLES LIKE '%binlog%';
 ```
 
 Open `/etc/my.cnf.d/server.cnf`. \[Create a backup first\]. Add the following lines:
@@ -616,6 +618,8 @@ BTW, the tutor **discourages** setting up a database cluster manually (i.e. with
 </br>
 
 ## Max Scale
+
+\[BTW, before starting\]: Putting Maxscale on web-server node(s) improves performance about 30% when db is on high load (50k selects/sec + 10k insert,delete,update/sec). Use also unix socket instead of TCP port to prevent exposing listening port to the outside network. (based on alejandro's yt comment)
 
 First off, MaxScale is not free for production use ([BSL license](https://mariadb.com/bsl-faq-mariadb/)). As you can see [pricing](https://mariadb.com/pricing/), MaxScale is only available under 'Enterprise Platform'.
 
@@ -1159,7 +1163,7 @@ The following operations are routed to **master** (based on [routing decisions](
 
 <span style="color:blue;">**P.S.1**</span>:  
 This default behavior _might be_ to our benefit. Why? because we can have a single master with huge CPU and RAM resources which also accepts read queries. And a single replica with medium resources, merely for disasters (failover) and meaitenance.  
-Anyway, if you want to change/tune this behavior you use [Hinfilters](https://mariadb.com/kb/en/mariadb-maxscale-24-hintfilter/).
+Anyway, if you want to change/tune this behavior you use [Hintfilters](https://mariadb.com/kb/en/mariadb-maxscale-24-hintfilter/).
 
 #### Tuning the router
 
@@ -1247,6 +1251,86 @@ cluster.add('mxs2', {
 
 a columnar storage engine for interactive, ad hoc analytics at scale. can be deployed in addition to InnoDB to accelerate analytical queries. Though, be careful it needs [massive hardware](https://mariadb.com/kb/en/columnstore-minimum-hardware-specification/).
 
+### Aria
+
+see [this blog](https://mariadb.com/resources/blog/storage-engine-choice-aria/).
 
 ---
 
+</br>
+
+## Database in container VS local installation
+
+This [SO](https://devops.stackexchange.com/a/3374) gives a fair answer.
+
+[This blog](https://myopsblog.wordpress.com/2017/02/06/why-databases-is-not-for-containers/) explains some points against docker, but people in the comments say they have been using docker for production databases for years and (most of) the author points are wrong.
+
+#### Why Volumes Become Corrupted
+
+_based on [another blog](https://blog.poespas.me/posts/2024/05/19/docker-volume-restore/) in 2024:_
+
+Volumes can become corrupted for several reasons:
+- A container using the volume crashes or exits abnormally, leaving the volume in an inconsistent state.
+- The host system running Docker experiences file system errors or corruption.
+- A user or application accidentally deletes a critical file or directory within the volume.
+
+The blog also explains `docker volume backup` command for backup.
+
+</br>
+
+### Others
+
+_(based on [this SO](https://stackoverflow.com/a/48520630) on 2018)_
+
+We containerise our db in production (on-premises enterprise application). Many do. It's perfectly stable and the deployment is much simplified. Of course our db is not under stress; we're dealing with hundreds of concurrent users, not tens of thousands. We just make sure that the container has enough RAM and is monitored well.   
+If we did need to dedicate an entire VM to the db alone, then yes I would skip docker.
+
+_(based on [this reddit comment](https://www.reddit.com/r/docker/comments/18an6oc/comment/kbz5mqn/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button))_
+
+The standard at companies I've worked at has been to NOT containerize the database except in dev or demo environments. The main reason is that databases tend to have special load requirements and that central database nodes make backup and recovery easier. 
+
+However, with such light usage it may make sense to bundle everything. I don't know what kind of scale you're talking about here, deployment platform, expected load/TPS, what your SLA is, or your data loss tolerance. I'd say if your data is super important and needs to be available 99.999% of the time, external clusters (i.e. _not_ using docker) make more sense. 
+
+
+_(based on [another reddit](https://www.reddit.com/r/PostgreSQL/comments/11nwf54/comment/jbpi2hs/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button))_
+
+To add, running a production database in a container is not recommended (most of the time) It adds a layer of complexity and can cause issues with all of the mentioned above, especially if you're new to Postgres. It's great for testing and development, however.
+
+---
+
+</br>
+
+## Mariadb vs Mysql
+
+Read [mariadb incompatibility docs](https://mariadb.com/kb/en/mariadb-vs-mysql-compatibility/).
+
+What versions of MySQL and MariaDB? Their Optimizers started making significant diversions at 5.6 / 10.0. I have seen big timing differences either way. (And it is not always easy to trace the Optimizer feature that helped.) (based on [SO Rich James](https://stackoverflow.com/a/50752638))
+
+Mariadb is (usually) faster, cleaner code base, more storage engines, etc. citations:
+- [reddit from Oracle DBA](https://www.reddit.com/r/mysql/comments/1ggbouf/comment/mak6acz/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
+- see snapshots (yt-reddit) folder.
+
+---
+
+</br>
+
+## Misc
+
+### Should expect disaster?
+
+based on [this SO](https://stackoverflow.com/questions/72280126/myisam-vs-innodb-mariadb-for-lots-of-read-operations)
+
+Question: Should I expect anything to blow on a live system which relies on these tables?
+
+Answer: Yes - you should always plan for recovery from corruption, ransomware, meteor strikes. InnoDB might be more resillient than MyISAM but it doesn't solve all issues.
+
+Rich James: CPU resources are rarely the bottleneck for MySQL/MariaDB apps. When it is, there is usually a workaround of building a better index and/or reformulating the query. 
+
+Speaking of which, Be aware that InnoDB clusters the PK with the data; this has some impact on choice of indexes. See, especially, [Many-to-many](https://mysql.rjweb.org/doc.php/index_cookbook_mysql#many_to_many_mapping_table). 
+
+
+### FileSystem
+
+A [deep answer (SU)](https://superuser.com/a/1142731) about using mysql with BTRFS (btrfs) filesystem and copy-on-write.
+
+Also see percona blog about [mysql with ZFS](https://www.percona.com/blog/mysql-zfs-performance-update/).
