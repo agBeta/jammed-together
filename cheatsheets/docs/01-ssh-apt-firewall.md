@@ -188,6 +188,8 @@ Also, using ssh keys do have one unique feature compared to password login: you 
 
 You can get the best of both worlds by allowing password authentication **only from within your network**. ([here](https://serverfault.com/a/334482))
 
+The real vulnerability with password authentication is: When you log in with a password you transmit your password to the server. This means when you connect to the wrong server because of a typo, you've sent your password to them. With public key authentication, they cannot obtain your private key as only your public key every goes to the server. (same source)
+
 ### Generate ssh key pair
 
 Generating key pairs is done locally on home computer.
