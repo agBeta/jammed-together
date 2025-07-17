@@ -166,10 +166,29 @@ ssh andrew@95.179.129.251
 sudo -k
 ```
 
+### SSH change port
+
+Note, since sshd now uses socket-based activation Ubuntu 22.10 or later, running `sudo systemctl restart sshd` after changing `sshd_config` is **NOT enough**.
+However, first answer of [here](https://askubuntu.com/a/1439482) is ~~not needed~~; i.e. you _don't have to_ touch socket settings.. [The other answer](https://askubuntu.com/a/1534466) works fine for Ubuntu 24.04. Just run all of these in order:
+```sh
+sudo systemctl daemon-reload
+sudo systemctl restart ssh.socket
+sudo systemctl restart ssh.service
+```
 
 </br>
 
-## Generate ssh key pair
+## SSH Key
+
+### Why use ssh-key (instead of password authentication)?
+
+using Keys is like having a long 2000 character password (well technically its even more strength) as compared to what you can key in manually in a terminal.  
+
+Also, using ssh keys do have one unique feature compared to password login: you can specify the allowed commands. This can be done by modifying ~/.ssh/authorized_keys file at the server. ([here](https://serverfault.com/a/334483))
+
+You can get the best of both worlds by allowing password authentication **only from within your network**. ([here](https://serverfault.com/a/334482))
+
+### Generate ssh key pair
 
 Generating key pairs is done locally on home computer.
 
