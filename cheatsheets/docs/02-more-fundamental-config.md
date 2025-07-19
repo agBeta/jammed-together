@@ -10,13 +10,42 @@ sudo timedatectl
 # find your timezone
 sudo timedatectl list-timezones
 
-sudo timedatectrl set-timezone Europe/Paris
+# 🔶 see Note 2
+sudo timedatectl set-timezone Europe/Paris
 
 # confirm the last command worked
 sudo timedatectl 
 
+# other commands (though, why would you use them? daylight saving change?)
+# 🔶 see Note 2
+timedatectl set-time 15:58:30
+timedatectl set-time 20151120 
+
 date
 ```
+
+(Note 1)  
+Never change _Hardware_ clock (also called **RTC**). let it remain UTC. Anyway, the command to change hardware clock is `timedatectl set-local-rtc 1` but... **just DON'T**. (here 1 means use the local time for hardware clock).
+
+(Note 2)  
+If you set RTC to be in local time (though why would you do that?!), then `set-timezone` **will also update the RTC time**. Also `set-time` **will _always_** update the RTC time accordingly, **no matter** RTC is in local or not. ([timedatectl docs](https://www.freedesktop.org/software/systemd/man/latest/timedatectl.html#set-time%20%5BTIME%5D))
+
+For timezone, typically you have three choices: UTC vs timezone of server location vs timezone of base HQ. Here are some points, _though most of them may be irrelevant in some contexts_ (e.g. if we have only one server) but the points are still insightful ([source](https://serverfault.com/questions/14685/local-timezones-on-servers-considered-harmful)):
+
+- Daylight savings rules change, and updates do not always happen in a timely fashion. UTC makes this go away.
+- When logs from servers in different location need to be compared, UTC makes a great common standard.
+
+### NTP
+
+You can tell the server to sync its time using other remote computers. This is called NTP (Network Time Protocol). you can enable it by `timedatectl set-ntp true`. To check whether the server is using NTP or not, run `timedatectl status`. you'll see a line 'NTP service'.  
+
+Of course, the server needs special configuration and packages so that it can sync its time using NTP. A fresh VPS instance usually has this already configured, so you don't have to touch anything. But for sake of theory: There are at least 3 different popular packages/tools for NTP: `ntpd`, `chronyd`, `systemd-timesyncd`. The third one is lightweight and usually is the default. 
+
+Check if systemd-timesyncd is being used fo NTP, by running `ls -lash /var/lib/systemd/timesync/clock`. The modification time ("mtime") of this file is updated on each successful NTP synchronization. ([systemd-timesyncd docs](https://www.freedesktop.org/software/systemd/man/latest/systemd-timesyncd.service.html#))
+
+You can see config in `cat /etc/systemd/timesyncd.conf`. [`SaveIntervalSec`](https://www.freedesktop.org/software/systemd/man/latest/timesyncd.conf.html#SaveIntervalSec=) is probably the most important option. Anyway, won't touch it.
+
+</br>
 
 
 ## Swap
@@ -29,7 +58,8 @@ btw, see:
 
 Even if the server has lots of RAM, a small to moderate amount of swap space will increase overall server stability.
 
-**swappiness** (between 0-100): 0 makes the kernel to avoid swapping whenever possible. We set the value to 1 (one). 
+**swappiness** is a value between 0-100. swappiness=0 tells the kernel to avoid swapping processes out of physical memory for as long as possible. Also note, Ubuntu **server** installations have different performance requirements to **desktop** systems, and the default value of 60 is likely more suitable ([ubuntu](https://help.ubuntu.com/community/SwapFaq)).
+
 
 > <span style="color: dodgerblue;">**IMPORTANT**</span>  
 >  **Mariadb crashes** if too much swapping occurs^. So if the mariadb keeps crashing, it means you need to buy more RAM (i.e. swapping cannot help you).  
@@ -123,6 +153,7 @@ Add the following at the **end**:
 ```
 
 Now **reboot the server**. Check if swap is enabled by `sudo swapon -s` or `htop`.
+
 
 
 </br>
@@ -220,6 +251,8 @@ Find `GRUB_CMDLINE_LINUX`. Edit as the following:
 GRUB_CMDLINE_LINUX="ipv6.disable=1"
 ```
 
+Note, you may set `GRUB_CMDLINE_LINUX_DEFAULT="ipv6.disable=1 quiet splash"` to disable all traces of ipv6 completely. ([SO](https://askubuntu.com/a/337736))
+
 Save. Then:
 
 ```sh
@@ -229,6 +262,7 @@ sudo reboot
 # verify
 ip a | grep inet6
 ```
+
 
 </br>
 
@@ -253,6 +287,18 @@ sudo nano custom_overrides.conf
 ```
 
 Add these lines at the end (after cache pressure that are already added):
+
+> <span style="color: brown;">**\[WARNING\]**</span>  
+> Some of these settings **may^** conflict with the way network is setup inside your hosting provider's datacenter.  
+> For example `rp_filter=2` (i.e. loose mode) is recommended if using asymmetric routing or other complicated routing. ([here](https://sysctl-explorer.net/net/ipv4/rp_filter/))
+
+> <span style="color: dodgerblue;">**\[IMPORTANT\]**</span>  
+> The following values **may^** not be suitable for your workload. They are merely recommendations of 'Nginx Perfect Server' course.  
+> For example, a sane value for `tcp_max_syn_backlog` depends on the number of concurrent connections you expect to handle. Whether you use Nginx as reverse proxy (or HAProxy, etc) plays a role. ([here](https://serverfault.com/a/953908))
+
+(^) '_may_' does NOT mean these settings are necessarily bad.
+
+
 ```sh
 # IP SPOOFING
 net.ipv4.conf.default.rp_filter = 1
