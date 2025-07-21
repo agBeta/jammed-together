@@ -162,6 +162,12 @@ ssh andrew@95.179.129.251
 # should be able to login as non-root user.
 ```
 
+BTW, you may need to change default shell of `andrew` user, by:
+
+```sh
+chsh -s /bin/bash andrew
+```
+
 #### clear sudo password cache
 ```sh
 sudo -k
