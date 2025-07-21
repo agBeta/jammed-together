@@ -40,6 +40,10 @@ ssh-keygen -R 95.179.129.251
 
 ## Non-root (Part 2)
 
+
+> **WARNING**:
+> <span style="color: red; font-weight: bold">DO NOT set `PasswordAuthnetication: no` before creating an ssh-key</span>.
+
 Let's change the root user password.
 
 ```sh
