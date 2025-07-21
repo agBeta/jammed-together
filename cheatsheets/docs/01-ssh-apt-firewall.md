@@ -310,6 +310,14 @@ Now you can ssh into the server using: `ssh server200`
 
 btw, You can add **another** server in the same `config` file. Simply add a blank line in between, then write those 6 variables for the new server.
 
+\[later\]: Note, you can use override files. accodring to notes at the beginning of `ssh_config` file, configuration data is parsed as follows:
+- command line options
+- user-specific file
+- system-wide file
+
+Any configuration value is only changed the first time it is set. Thus, host-specific definitions should be at the beginning of the configuration file, and defaults at the end.
+
+
 ### (More) SSH Hardening
 
 _(btw, 'Firewall' and 'fail2ban' are also related)_
