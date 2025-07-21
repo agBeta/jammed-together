@@ -283,7 +283,7 @@ echo "/dev/dataVG/logs /var/log ext4 defaults 0 0" >> /etc/fstab
 
 </br>
 
-#### Extending or _Reducing_ a LV
+#### Extending a LV
 
 Here comes the power of LVM. You can extend a local volume, i.e. as a result extend size of a directory in your filesystem without downtime.  
 
@@ -319,6 +319,42 @@ sudo lvextend -L +8G /dev/vg_1/lv_1
 # now we MUST expand the filesystem to utilize this new space:
 sudo resize2fs /dev/vg_1/lv_1
 ```
+
+#### Reducing a LV
+
+Suppose result of command below shows 0 free size.
+
+```sh
+sudo vgdisplay ubuntu-vg
+#  Free  PE / Size       0 / 0 
+```
+
+That means the Volume Group does indeed have 0 free space since it's already allocated to the existing logical volumes. To see the distribution on the various partitions run the following: ([here](https://superuser.com/a/819728))
+
+```sh
+lvdisplay
+```
+
+Note, it should match the result `df -h` command.
+
+You can free up space in the Volume Group by reducing the `/dev/mapper/[..]` partition, but most partitions are hard to reduce.
+
+Now, imagine the logical volume that contains the root “/” filesystem is ~200GB, and we need to shrink it to ~150GB to make room for a new logical volume. ([here](https://askubuntu.com/questions/124465/how-do-i-shrink-the-root-logical-volume-lv-on-lvm))
+
+Find the name of the Volume Group (henceforth “somevg”) that contains the root Logical Volume:
+
+```sh
+sudo lvs
+```
+
+You can reduce its size by:
+
+```sh
+sudo lvreduce --resizefs --size -50G /dev/<somevg>/<lv-name>
+# ❌ will fail
+```
+
+Note, the above will fail **unless** you run the command from, say, Live CD (they are called **Linux rescue CD** which has `lvm2` package installed on it; _answer in 2014_). because if you're already logged in it means you've already mounted the root filesystem, and it is **not possible to shrink a filesystem while it is mounted**. 
 
 </br>
 
