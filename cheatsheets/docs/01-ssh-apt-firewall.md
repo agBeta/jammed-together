@@ -39,10 +39,11 @@ ssh-keygen -R 95.179.129.251
 </br>
 
 ## Non-root (Part 2)
-
+ 
 > [!WARNING]  
 > **WARNING**:  
 > <span style="color: red; font-weight: bold">DO NOT set `PasswordAuthnetication: no` before creating an ssh-key</span>.
+
 
 Let's change the root user password.
 
@@ -166,12 +167,6 @@ ssh andrew@95.179.129.251
 # should be able to login as non-root user.
 ```
 
-BTW, you may need to change default shell of `andrew` user, by:
-
-```sh
-chsh -s /bin/bash andrew
-```
-
 #### clear sudo password cache
 ```sh
 sudo -k
@@ -250,11 +245,11 @@ Now, we need to copy the public key to the server:
 ```sh
 # still on your home computer (NOT the server)
 
-ssh-copy-id -i .ssh/server200_keys.pub andrew@95.179.129.251
+ssh-copy-id -i ~/.ssh/server200_keys.pub andrew@95.179.129.251
 # type the password of 'andrew' user (P.S.2)
 
 # now ssh into server using the PRIVATE key:
-ssh -i .ssh/server200_keys andrew@95.179.129.251
+ssh -i ~/.ssh/server200_keys andrew@95.179.129.251
 # type the passphrase
 ```
 
@@ -279,6 +274,16 @@ UsePAM no
 ```
 
 Don't forget to **restart the ssh service**.
+
+
+\[later\]: Note, you can use override files. accodring to notes at the beginning of `ssh_config` file, configuration data is parsed as follows:
+- command line options
+- user-specific file
+- system-wide file
+
+Any configuration value is only changed the first time it is set. Thus, host-specific definitions should be at the beginning of the configuration file, and defaults at the end.
+
+
 
 Now let's check password authentication is disabled:
 ```sh
@@ -320,14 +325,6 @@ Now you can ssh into the server using: `ssh server200`
 
 btw, You can add **another** server in the same `config` file. Simply add a blank line in between, then write those 6 variables for the new server.
 
-\[later\]: Note, you can use override files. accodring to notes at the beginning of `ssh_config` file, configuration data is parsed as follows:
-- command line options
-- user-specific file
-- system-wide file
-
-Any configuration value is only changed the first time it is set. Thus, host-specific definitions should be at the beginning of the configuration file, and defaults at the end.
-
-
 ### (More) SSH Hardening
 
 _(btw, 'Firewall' and 'fail2ban' are also related)_
@@ -338,6 +335,21 @@ Add the following in `sshd` config (or an override file). Note, we are not locki
 ```sh
 PermitRootLogin no
 ```
+
+
+### `ssh-agent`
+
+ssh-agent is a key manager for SSH. It saves you from typing a passphrase every time you connect to a server. It runs in the background on your system, separately from ssh, and it usually starts up the first time you run ssh after a reboot. It doesn't write any key material to disk.
+
+#### What is agent forwarding?
+
+SSH's agent forwarding feature allows your local SSH agent to reach through an existing SSH connection and transparently authenticate on a more distant server. For example, say you SSH into an EC2 instance, and you want to clone a private GitHub repository from there. Without agent forwarding, you'd have to store a copy of your GitHub private key on the EC2 host. With agent forwarding, the SSH client on EC2 can use the keys on your local computer to authenticate to GitHub. ([here](https://smallstep.com/blog/ssh-agent-explained/))
+
+Don't turn on `ForwardAgent` by default. `ssh -A` turns on agent forwarding for a single session. Or don't use agent forwarding at all. If you're trying to access internal hosts through a bastion, `ProxyJump` is a much safer alternative for this use case. It is native feature of `ssh`.
+
+#### What does `eval` do in eval $(ssh-agent)?
+
+`eval` isn't about ssh-agent. it's unix/linux. see [this SO](https://unix.stackexchange.com/q/351725).
 
 
 
@@ -515,6 +527,7 @@ sudo nano jail.nano
 
 Find `bantime` directive (BTW, jail.local may not exist at all, so you may have to create it, and of course it'll be empty). The default is 10 minutes which is **far too short**. Specify seven days `7d`.  Change `findtime` to `3h` (three hours). Change `maxretry` to `3`.  
 The current config means if you hit 3 failed attempts in 3 hours, on the 3rd attempt, your host (source ip) will be banned for 7 days.
+
 
 Find `ignoreip` directive (probably commented out by default). If you have a **static** ip, append your ip at the **end**:
 ```sh
