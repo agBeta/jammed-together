@@ -108,6 +108,12 @@ andrew[tab] ALL=(ALL:ALL) ALL
 The first `ALL` means the rule will apply to all hosts.  
 The fourth `ALL` means there is **NO restriction** on which command andrew user can run with `sudo`.
 
+You may also add the following at the begging, so that you'll be asked for `sudo` only once per hour:
+
+```
+Defaults        timestamp_timeout=60
+```
+
 Now save & exit.
 
 BTW, _dreams of code "Setting up a production-ready VPS"_ uses `usermod` instead. There is no difference though (based on [this SO](https://unix.stackexchange.com/questions/476416/adding-a-user-to-sudo-group-vs-creating-a-sudoers-file)).
@@ -117,6 +123,8 @@ usermod -aG sudo andrew
 ```
 
 </br>
+
+## Harden SSH
 
 #### Prevent root login
 
@@ -256,6 +264,10 @@ ssh -i ~/.ssh/server200_keys andrew@95.179.129.251
 P.S.2: The password that you gave, when creating the user (or when changing via `passwd`); NOT ~~the ssh key-pair passphrase~~.
 
 Now that we can login using ssh key, let's **turn off password authentication** (but why? see [this SO](https://serverfault.com/a/334483)).
+
+> [!WARNING]  
+> **WARNING Again**:  
+> <span style="color: red; font-weight: bold">DO NOT set `PasswordAuthnetication: no` before creating an ssh-key</span>.
 
 ```sh
 cd /etc/ssh
@@ -478,6 +490,33 @@ sudo ufw status verbose
 ```
 
 In order to configure Cloud firewall, your hosting provider should have a section in its dashboard. It is recommended to restrict ssh to your IP address only.
+
+#### Deleting a rule
+
+based on [here](https://askubuntu.com/a/1386796):
+
+```sh
+ufw status numbered
+
+ufw delete 5
+
+# or
+sudo ufw delete allow from 203.0.113.101
+
+sudo ufw allow from 203.0.113.0/24 to any port 3306
+```
+
+#### Logging
+
+```sh
+ufw status verbose
+# Find 'Logging'
+
+sudo ufw logging medium
+
+# view logs
+tail -f /var/log/ufw.log
+```
 
 #### ufw is `active (exited)`
 
