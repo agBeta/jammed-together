@@ -63,7 +63,7 @@ Even if the server has lots of RAM, a small to moderate amount of swap space wil
 
 > <span style="color: dodgerblue;">**IMPORTANT**</span>  
 >  **Mariadb crashes** if too much swapping occurs^. So if the mariadb keeps crashing, it means you need to buy more RAM (i.e. swapping cannot help you).  
-(^): both 'Nginx Perfect Server' and 'Mariadb Administration' course warned this. The later course did not even create any swap file or swap partition.  
+(^): both 'Nginx Perfect Server' and 'Mariadb Administration' course warned this. The later course did not even create any swap file or swap partition. Also [mariadb docs](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/configuring-mariadb/mariadb-performance-advanced-configurations/configuring-swappiness) says the same.  
 
 > For **Valkey**, swap **must be enabled** and that your swap file size is equal to amount of memory on your system. (based on [valkey admin](https://valkey.io/topics/admin/)) 
 
@@ -124,6 +124,7 @@ sudo reboot
 #### Create swapfile
 
 ```sh
+# 🔶 command below take a few seconds. **DO NOT kill it**.
 sudo dd if=/dev/zero of=/swapfile bs=1024 count=2097152
 # 2097152 = 2 GB (RAM) * 1024 * 1024. it means a 2GB swapfile.
 
@@ -147,13 +148,28 @@ sudo cp fstab fstab.bak
 sudo nano fstab
 ```
 
-Add the following at the **end**:
+Add the following at the end:
 ```sh
-/swapfile swap swap defaults 0 0
+# ['Nginx perfect' course says ->] /swapfile  swap  swap  defaults  0  0
+
+# ... but based on https://askubuntu.com/a/126049 and also fstab of our cloud provider, the correct format is:
+/swapfile    none    swap    sw    0   0
 ```
 
 Now **reboot the server**. Check if swap is enabled by `sudo swapon -s` or `htop`.
 
+BTW, you could (but why would you?) create swapfile in any directory, i.e. not necessarily `/swapfile`, using the following: 
+
+```sh
+# reserve 1G swapfile (create swapfile in the current directory)
+sudo fallocate -l 1G ./swapfile
+
+# tell the kernel to use the reserved swapfile as Swap space
+sudo mkswap swapfile 
+
+# enabling swapping
+sudo swapon swapfile
+```
 
 
 </br>
@@ -439,7 +455,47 @@ Write the following lines (copy & paste):
     root    hard    nofile      120000
 ```
 
+Some Notes:
+
+- Hard limits are enforced "here and now", i.e. process can never access a resource if it would cause violation of a hard limit. A process _can exceed soft limit for a period of time_. Soft limit can be raised by a non-root user up to the hard limit. (comment in [SO](https://serverfault.com/questions/265155/soft-limit-vs-hard-limit))
+
+- You can also set other security measurements, like `maxlogin`, etc. But we don't do it now. see default comments in `limits.conf` file for more info.
+
+- comments in `limits.conf` file explicitly state:  
+a <strong>user specific</strong> setting here can be overridden only with a user specific setting in the `limits.d` subdirectory.  
+This means **if `limits.conf` contains settings for `root` (i.e. `root` under `<domain>` column)**, and you want to change defaults for root user, then you MUST have `root` under `<domain>` inside your custom override file (in `limits.d`). In other words, the following `*   hard   nofile  1000` in some **override** file **will NOT** not override settings for root. Again, just to reiterate, we assumed `root` has some default settings in `limits.conf`.
+
 Save. then **reboot the server**. Verify the limits again via `ulimit`.
+
+BTW, in order to see **max number** of open files (not ~~currently opened~~) like mariadb-server, etc. see [this link](https://www.cyberciti.biz/faq/viewing-open-file-limit-for-linux-process/). basically:
+
+```sh
+pgrep mariadbd
+# it will print all processes having mariadbd in their name
+
+# alternatively, you can use pidof. here we use for sshd.
+pidof sshd
+```
+
+Assuming the previous command returned 3083. then:
+
+```sh
+cd /proc/3083
+cat limits
+```
+
+If you want to see <span style="color: blue">current number</span> of open files on the OS (e.g. when server is under high load), use:
+
+```sh
+cat /proc/sys/fs/file-nr
+# 40096   0       65536
+```
+
+It means this server has 40096 out of max 65536 open files.
+
+</br>
+
+---
 
 ### PAM
 
