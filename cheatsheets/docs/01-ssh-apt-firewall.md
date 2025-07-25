@@ -211,6 +211,12 @@ You can get the best of both worlds by allowing password authentication **only f
 
 The real vulnerability with password authentication is: When you log in with a password you transmit your password to the server. This means when you connect to the wrong server because of a typo, you've sent your password to them. With public key authentication, they cannot obtain your private key as only your public key every goes to the server. (same source)
 
+#### known_hosts vs authorized_keys
+
+The `known_hosts` file lets the client authenticate the server, so it is maintained on your local machine, to check that it isn't connecting to an impersonator. The `authorized_keys` file lets the server authenticate the user, so it is maintained on remote server. ([SO](https://security.stackexchange.com/a/20710))
+
+</br>
+
 ### Generate ssh key pair
 
 Generating key pairs is done locally on home computer.
@@ -219,7 +225,10 @@ Generating key pairs is done locally on home computer.
 # on your home computer (NOT the server)
 
 cd ~
+
+# [DON'T] see a better command below
 ssh-keygen -t rsa -b 4096 
+
 # Enter file in which ... (type the following)
 [...]   .ssh/server200_keys
 # Enter passphrase (P.S.1)
@@ -314,9 +323,15 @@ ssh -o  PreferredAuthentication=password  -o PubkeyAuthentication=no andrew@95.1
 Trying to remember ip addresses & usernames is not good. Instead we use config file with aliases. The config file is created **locally** on home computer.
 
 ```sh
-cd ~
-nano .ssh/config
-# 🔷 it might be located in /etc/ssh/config
+cd /etc/ssh
+
+# better way (using override file):
+cd ssh_config.d
+sudo nano server200.conf
+
+# traditional way (modifying config file directly):
+sudo cp ssh_config ssh_config.bak
+sudo nano ssh_config
 ```
 
 \[BTW\]: Here, we modified ssh **client** config, not sshd **daemon**. see [this SO](https://serverfault.com/a/343534).
@@ -352,6 +367,33 @@ PermitRootLogin no
 ### `ssh-agent`
 
 ssh-agent is a key manager for SSH. It saves you from typing a passphrase every time you connect to a server. It runs in the background on your system, separately from ssh, and it usually starts up the first time you run ssh after a reboot. It doesn't write any key material to disk.
+
+useful commands:
+
+```sh
+# start the agent
+eval "$(ssh-agent -s)"
+# .. or
+eval ssh-agent $SHELL
+# .. or with timeout: (based on https://serverfault.com/a/841861.)
+ssh-agent -t 300 $SHELL
+
+ssh-add ~/.ssh/<_private_-key>
+
+ssh-add -l
+
+# to delete an entry from ssh-agent
+ssh-add -d /path/to/private/key
+
+# kill ssh-agent
+ssh-agent -k
+# ... or if ssh-agent PIS is not set
+pidof ssh-agent
+# now kill them.
+
+# So, now if you try to ssh into the servers, you'll be prompted for passphrase again
+# because the agent is killed.
+```
 
 #### What is agent forwarding?
 
@@ -442,6 +484,13 @@ The current best practice is to use `gpg` in place of apt-key and add-apt-reposi
 Read more in [digital ocean article](https://www.digitalocean.com/community/tutorials/how-to-handle-apt-key-and-add-apt-repository-deprecation-using-gpg-to-add-external-repositories-on-ubuntu-22-04). Also, [this SO](https://unix.stackexchange.com/questions/717434/apt-key-is-deprecated-what-do-i-do-instead-of-add-apt-repository) about add-apt-repository warning states the same.
 
 
+### Remove
+
+```sh
+sudo apt purge <pkg>
+sudo apt remove <pkg>
+sudo apt autoremove
+```
 
 
 </br>
@@ -504,6 +553,12 @@ ufw delete 5
 sudo ufw delete allow from 203.0.113.101
 
 sudo ufw allow from 203.0.113.0/24 to any port 3306
+```
+
+For example to ban an ip you can:
+
+```sh
+sudo ufw deny from <ip_address> to any  
 ```
 
 #### Logging
@@ -584,9 +639,11 @@ BTW, in order for fail2ban to work for `sshd`, it may be **required** to also ad
 
 ```ini
 [DEFAULT]
+# 2 min is too low. change it.
 bantime = 2m
 ignoreip = 127.0.0.1/8
 maxretry = 3
+# 1 min is too low. change it.
 findtime = 1m
 
 [sshd]
@@ -615,3 +672,71 @@ If you want to see the status & list of banned ip addresses for ssh:
 ```sh
 sudo fail2ban-client status sshd
 ```
+
+</br>
+
+### Nginx with fail2ban
+
+You'll see lots of scanner and malicious bots trying to attack nginx server (port 80 or 443): malicious ssl handshake, requesting `.env` files on server, etc. see [this article](https://scalastic.io/en/ufw-fail2ban-nginx/).
+
+Add this to `jail.local`:
+
+```ini
+# ... ssh & other ...
+
+[nginx-botsearch]
+enabled = true
+port     = http,https
+filter   = nginx-botsearch
+logpath  = %(nginx_access_log)s
+```
+
+Tha `filter` above is the name of a file in `/etc/fail2ban/filter.d` directory. Lot of filters are shipped with `fail2ban`  BUT they are **NOT enabled by default**. Just like we did with `[ssh]`, we need to explicitly use `enabled: true` directive. 
+
+The filters work by looking at logs. So if you have nginx installed (and enabled nginx protection blocks on `jail.local`), then `fail2ban` will look at logs produced by nginx and based on its filters will decided whether to ban an ip or not.
+
+However, if you use docker to spin up Nginx, then fail2ban cannot magically read logs produced by a container. You need to perform extra step to make it.
+
+#### Nginx as docker container + fail2ban
+
+_([issue](https://github.com/fail2ban/fail2ban/issues/3770))_
+
+- if fail2ban is installed in container, the filter and banning actions could work out of the box
+
+- if fail2ban is installed on host, besides the question of IP, you've to configure the jail (and container) to access nginx logs or journal from fail2ban (so filter will work), as well as the banning action should get proper input chain configured (mostly DOCKER-USER), but it depends. See [wiki :: Fail2Ban and Docker](https://github.com/fail2ban/fail2ban/wiki/Fail2Ban-and-Docker).
+
+One solution you need to tell the nginx **container** to send its logs to syslog ([SO](https://stackoverflow.com/questions/36180792/how-to-make-fail2ban-read-json-docker-logs)). fail2ban can read syslog ([fail2ban](https://fail2ban.readthedocs.io/en/latest/filters.html#syslog)).
+
+Other solutions may exists, like by setting `logpath` of jail to point to `/var/lib/docker/container/<container-id-nginx>`.  
+Be mindful though, if you set `enabled=true` for some service in `jail.local` and fail2ban cannot find log files in the specified `logpath` location, then the whole **fail2ban service won't start up** (i.e `systemctl start fail2ban` will fail).
+
+Also note, whenever you delete the nginx container and recreate a new one, the container-id and as a result log path is changed. So you need to update `logpath` in fail2ban `jail.local`.
+
+```ini
+# ... other default
+
+[nginx-botsearch]
+enabled = true
+port     = http,https
+filter   = nginx-botsearch
+# logpath  = %(nginx_access_log)s
+# logpath  = /var/lib/docker/containers/<container-id>/local-logs/container.log
+logpath = /var/lib/docker/containers/232cenw39n2c7/local-logs/*container.log
+# [default ->] nginx_access_log = /var/log/nginx/*access.log
+# [default ->] nginx_error_log = /var/log/nginx/*error.log
+chain = DOCKER-USER
+# increase these in production:
+bantime = 5m
+maxretry = 4
+findtime = 10m
+```
+
+Let fail2ban work. After a few hours come back and check if it actually worked, using:
+
+```sh
+fail2ban-client status nginx-botsearch
+```
+
+> P.S Later: actually this is not that easy. When using `local` logging driver for a container, docker by default will add some binary strings at the begging and end of each log (verified + [SO](https://stackoverflow.com/questions/71181063/docker-local-file-logging-driver-adds-something-to-the-beginning-and-end-of-the)). As a result, fail2ban regex patterns **will NO longer match the logs**, so fail2ban cannot catch failed attempts to ban some ip.
+
+See also [fail2ban regex docs](https://fail2ban.readthedocs.io/en/latest/filters.html#developing-filter-regular-expressions)
