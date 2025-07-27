@@ -270,6 +270,8 @@ ssh -i ~/.ssh/server200_keys andrew@95.179.129.251
 # type the passphrase
 ```
 
+Note: if ssh port is not 22, you should use `ssh-copy-id -p <ssh-port> ...`.
+
 P.S.2: The password that you gave, when creating the user (or when changing via `passwd`); NOT ~~the ssh key-pair passphrase~~.
 
 Now that we can login using ssh key, let's **turn off password authentication** (but why? see [this SO](https://serverfault.com/a/334483)).
