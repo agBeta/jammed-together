@@ -557,6 +557,14 @@ sudo ufw delete allow from 203.0.113.101
 sudo ufw allow from 203.0.113.0/24 to any port 3306
 ```
 
+Note, **these two are NOT the same.** The first one allows a connection if _its source port in ip1_ is 3000. The second one allows connections from ip1 **TO** any program in the server that is listening on port 3000.
+
+```sh
+ufw allow from <ip1> port 3000
+# ... is different from ...
+ufw allow from <ip1> to any port 3000
+```
+
 For example to ban an ip you can:
 
 ```sh
