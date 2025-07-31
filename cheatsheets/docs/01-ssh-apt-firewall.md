@@ -542,6 +542,16 @@ sudo ufw status verbose
 
 In order to configure Cloud firewall, your hosting provider should have a section in its dashboard. It is recommended to restrict ssh to your IP address only.
 
+#### without reboot
+
+might not work but you can try:
+
+```sh
+sudo ufw reload
+sudo /usr/lib/ufw/ufw-init flush-all
+sudo service ufw restart
+```
+
 #### Deleting a rule
 
 based on [here](https://askubuntu.com/a/1386796):
@@ -658,7 +668,8 @@ findtime = 1m
 
 [sshd]
 enabled = true
-port    = ssh,20198
+port    = ssh,20198 # 🟥 change 20198 to actual ssh port
+mode = aggressive
 ```
 
 ### Unban
