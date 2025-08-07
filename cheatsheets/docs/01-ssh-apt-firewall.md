@@ -312,7 +312,7 @@ Now let's check password authentication is disabled:
 ```sh
 exit
 
-ssh -o  PreferredAuthentication=password  -o PubkeyAuthentication=no andrew@95.179.129.251
+ssh [-p <ssh-port>] -o  PreferredAuthentications=password -o PubkeyAuthentication=no andrew@95.179.129.251
 ```
 
 > <span style="color: brown;">**WARNING**</span>  
@@ -363,6 +363,14 @@ Add the following in `sshd` config (or an override file). Note, we are not locki
 
 ```sh
 PermitRootLogin no
+```
+
+#### Tell ssh to use a specific key
+
+Sometimes, when creating a new VPS, the cloud provider creates an ssh key for you. Download it and use it like this:
+
+```sh
+ssh -o "IdentitiesOnly=yes" -i /path/to/privkey andrew@<ip>
 ```
 
 
